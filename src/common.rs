@@ -81,18 +81,18 @@ impl From<WKBDimension> for geo_traits::Dimensions {
 /// In extended WKB this additionally informs whether there's a u32 SRID immediately after this,
 /// which we need to know to skip.
 #[repr(transparent)]
-pub struct WKBGeometryCode(u32);
+pub(crate) struct WKBGeometryCode(u32);
 
 impl WKBGeometryCode {
-    pub fn new(code: u32) -> Self {
+    pub(crate) fn new(code: u32) -> Self {
         Self(code)
     }
 
-    pub fn has_srid(&self) -> bool {
+    pub(crate) fn has_srid(&self) -> bool {
         self.0 & EWKB_FLAG_SRID == EWKB_FLAG_SRID
     }
 
-    pub fn get_type(&self) -> WKBResult<WKBType> {
+    pub(crate) fn get_type(&self) -> WKBResult<WKBType> {
         let code = self.0;
         let mut dim = WKBDimension::Xy;
 
@@ -159,7 +159,7 @@ pub enum WKBType {
 
 impl WKBType {
     /// Construct from a byte slice representing a WKB geometry
-    pub fn from_buffer(buf: &[u8]) -> WKBResult<Self> {
+    pub(crate) fn from_buffer(buf: &[u8]) -> WKBResult<Self> {
         let mut reader = Cursor::new(buf);
         let byte_order = reader.read_u8().unwrap();
         let geometry_code = match byte_order {
@@ -175,7 +175,7 @@ impl WKBType {
         WKBGeometryCode(geometry_code).get_type()
     }
 
-    pub fn as_geometry_code(&self) -> WKBGeometryCode {
+    pub(crate) fn as_geometry_code(&self) -> WKBGeometryCode {
         let code = match self {
             Self::Point(dim) => 1 + dim.as_u32_offset(),
             Self::LineString(dim) => 2 + dim.as_u32_offset(),

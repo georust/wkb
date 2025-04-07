@@ -12,44 +12,37 @@ use geo_traits::{
     Dimensions, GeometryTrait, UnimplementedLine, UnimplementedRect, UnimplementedTriangle,
 };
 
+/// Parse a WKB byte slice into a geometry.
+///
+/// An opaque object that implements [`GeometryTrait`]. Use methods provided by [`geo_traits`] to
+/// access the underlying data.
+///
+/// The contained [dimension][geo_traits::Dimensions] will never be `Unknown`.
 #[derive(Debug, Clone)]
-pub enum Wkb<'a> {
-    Point(Point<'a>),
-    LineString(LineString<'a>),
-    Polygon(Polygon<'a>),
-    MultiPoint(MultiPoint<'a>),
-    MultiLineString(MultiLineString<'a>),
-    MultiPolygon(MultiPolygon<'a>),
-    GeometryCollection(GeometryCollection<'a>),
-}
+pub struct Wkb<'a>(WkbInner<'a>);
 
 impl<'a> Wkb<'a> {
+    /// Parse a WKB byte slice into a geometry.
+    ///
+    /// ### Performance
+    ///
+    /// WKB is not a zero-copy format because coordinates are not 8-byte aligned and because an
+    /// initial scan needs to take place to know internal buffer offsets.
+    ///
+    /// This function does an initial pass over the WKB buffer to validate the contents and record
+    /// the byte offsets for relevant coordinate slices but does not copy the underlying data to an
+    /// alternate representation. This means that coordinates will **always be constant-time to
+    /// access** but **not zero-copy**. This is because the raw WKB buffer is not 8-byte aligned,
+    /// so when accessing a coordinate the underlying bytes need to be copied into a
+    /// newly-allocated `f64`.
     pub fn try_new(buf: &'a [u8]) -> WKBResult<Self> {
-        let mut reader = Cursor::new(buf);
-        let byte_order = Endianness::try_from(reader.read_u8()?).unwrap();
-        let wkb_type = WKBType::from_buffer(buf)?;
-
-        let out = match wkb_type {
-            WKBType::Point(dim) => Wkb::Point(Point::new(buf, byte_order, 0, dim)),
-            WKBType::LineString(dim) => Wkb::LineString(LineString::new(buf, byte_order, 0, dim)),
-            WKBType::Polygon(dim) => Wkb::Polygon(Polygon::new(buf, byte_order, 0, dim)),
-            WKBType::MultiPoint(dim) => Wkb::MultiPoint(MultiPoint::new(buf, byte_order, dim)),
-            WKBType::MultiLineString(dim) => {
-                Wkb::MultiLineString(MultiLineString::new(buf, byte_order, dim))
-            }
-            WKBType::MultiPolygon(dim) => {
-                Wkb::MultiPolygon(MultiPolygon::new(buf, byte_order, dim))
-            }
-            WKBType::GeometryCollection(dim) => {
-                Wkb::GeometryCollection(GeometryCollection::try_new(buf, byte_order, dim)?)
-            }
-        };
-        Ok(out)
+        let inner = WkbInner::try_new(buf)?;
+        Ok(Self(inner))
     }
 
-    pub fn dimension(&self) -> WKBDimension {
-        use Wkb::*;
-        match self {
+    pub(crate) fn dimension(&self) -> WKBDimension {
+        use WkbInner::*;
+        match &self.0 {
             Point(g) => g.dimension(),
             LineString(g) => g.dimension(),
             Polygon(g) => g.dimension(),
@@ -60,9 +53,9 @@ impl<'a> Wkb<'a> {
         }
     }
 
-    pub fn size(&self) -> u64 {
-        use Wkb::*;
-        match self {
+    pub(crate) fn size(&self) -> u64 {
+        use WkbInner::*;
+        match &self.0 {
             Point(g) => g.size(),
             LineString(g) => g.size(),
             Polygon(g) => g.size(),
@@ -71,6 +64,43 @@ impl<'a> Wkb<'a> {
             MultiPolygon(g) => g.size(),
             GeometryCollection(g) => g.size(),
         }
+    }
+}
+
+/// This is **not** exported publicly because we don't want to expose the enum variants publicly.
+#[derive(Debug, Clone)]
+pub(crate) enum WkbInner<'a> {
+    Point(Point<'a>),
+    LineString(LineString<'a>),
+    Polygon(Polygon<'a>),
+    MultiPoint(MultiPoint<'a>),
+    MultiLineString(MultiLineString<'a>),
+    MultiPolygon(MultiPolygon<'a>),
+    GeometryCollection(GeometryCollection<'a>),
+}
+
+impl<'a> WkbInner<'a> {
+    fn try_new(buf: &'a [u8]) -> WKBResult<Self> {
+        let mut reader = Cursor::new(buf);
+        let byte_order = Endianness::try_from(reader.read_u8()?).unwrap();
+        let wkb_type = WKBType::from_buffer(buf)?;
+
+        let out = match wkb_type {
+            WKBType::Point(dim) => Self::Point(Point::new(buf, byte_order, 0, dim)),
+            WKBType::LineString(dim) => Self::LineString(LineString::new(buf, byte_order, 0, dim)),
+            WKBType::Polygon(dim) => Self::Polygon(Polygon::new(buf, byte_order, 0, dim)),
+            WKBType::MultiPoint(dim) => Self::MultiPoint(MultiPoint::new(buf, byte_order, dim)),
+            WKBType::MultiLineString(dim) => {
+                Self::MultiLineString(MultiLineString::new(buf, byte_order, dim))
+            }
+            WKBType::MultiPolygon(dim) => {
+                Self::MultiPolygon(MultiPolygon::new(buf, byte_order, dim))
+            }
+            WKBType::GeometryCollection(dim) => {
+                Self::GeometryCollection(GeometryCollection::try_new(buf, byte_order, dim)?)
+            }
+        };
+        Ok(out)
     }
 }
 
@@ -137,8 +167,8 @@ impl<'a> GeometryTrait for Wkb<'a> {
         UnimplementedLine<f64>,
     > {
         use geo_traits::GeometryType as B;
-        use Wkb as A;
-        match self {
+        use WkbInner as A;
+        match &self.0 {
             A::Point(p) => B::Point(p),
             A::LineString(ls) => B::LineString(ls),
             A::Polygon(ls) => B::Polygon(ls),
@@ -213,8 +243,8 @@ impl<'a> GeometryTrait for &'a Wkb<'a> {
         UnimplementedLine<f64>,
     > {
         use geo_traits::GeometryType as B;
-        use Wkb as A;
-        match self {
+        use WkbInner as A;
+        match &self.0 {
             A::Point(p) => B::Point(p),
             A::LineString(ls) => B::LineString(ls),
             A::Polygon(ls) => B::Polygon(ls),

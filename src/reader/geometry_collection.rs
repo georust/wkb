@@ -2,8 +2,8 @@ use std::io::Cursor;
 
 use crate::common::WKBDimension;
 use crate::error::WKBResult;
-use crate::reader::geometry::Wkb;
 use crate::reader::util::{has_srid, ReadBytesExt};
+use crate::reader::Wkb;
 use crate::Endianness;
 use geo_traits::{Dimensions, GeometryCollectionTrait};
 
