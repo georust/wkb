@@ -3,6 +3,7 @@
 ## Unreleased
 
 - Your change here.
+- Expose `wkb::reader::Wkb` type through public API.
 
 ## 0.8.0 - 2024-12-03
 
