@@ -107,7 +107,7 @@ impl<'a> PolygonTrait for Polygon<'a> {
     }
 }
 
-impl<'a> PolygonTrait for &'a Polygon<'a> {
+impl<'a> PolygonTrait for &Polygon<'a> {
     type T = f64;
     type RingType<'b>
         = WKBLinearRing<'a>

@@ -98,7 +98,7 @@ impl<'a> LineStringTrait for LineString<'a> {
     }
 }
 
-impl<'a> LineStringTrait for &'a LineString<'a> {
+impl<'a> LineStringTrait for &LineString<'a> {
     type T = f64;
     type CoordType<'b>
         = Coord<'a>

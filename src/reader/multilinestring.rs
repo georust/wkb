@@ -96,7 +96,7 @@ impl<'a> MultiLineStringTrait for MultiLineString<'a> {
     }
 }
 
-impl<'a> MultiLineStringTrait for &'a MultiLineString<'a> {
+impl<'a> MultiLineStringTrait for &MultiLineString<'a> {
     type T = f64;
     type LineStringType<'b>
         = LineString<'a>
