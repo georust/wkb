@@ -1,4 +1,5 @@
 use geo_traits::to_geo::ToGeoGeometry;
+use geo_traits::{CoordTrait, GeometryTrait, LineStringTrait};
 use geo_types::Geometry;
 
 use crate::reader::read_wkb;
@@ -141,4 +142,37 @@ fn round_trip_geometry_collection() {
     write_geometry_collection(&mut buf, &orig, Endianness::BigEndian).unwrap();
     let retour = read_wkb(&buf).unwrap();
     assert_eq!(Geometry::GeometryCollection(orig), retour.to_geometry());
+}
+
+#[test]
+fn wkb_geo_traits_lifetime() {
+    // WKB representation of a LineString with 2 points at (1.0, 2.0) and (3.0, 4.0)
+    let buf = vec![
+        0x01, // little endian
+        0x02, 0x00, 0x00, 0x00, // type: LineString (2)
+        0x02, 0x00, 0x00, 0x00, // 2 points
+        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xF0, 0x3F, // x: 1.0
+        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x40, // y: 2.0
+        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xF0, 0x3F, // x: 3.0
+        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x40, // y: 4.0
+    ];
+
+    let coord;
+    {
+        let wkb = read_wkb(&buf).unwrap();
+        let wkb_ref = &wkb;
+        let wkb_ref_ref = &&wkb_ref;
+        match wkb_ref_ref.as_type() {
+            geo_traits::GeometryType::LineString(line_string) => {
+                coord = line_string.coord(0);
+            }
+            _ => {
+                panic!("Expected LineString");
+            }
+        }
+    };
+
+    assert!(coord.is_some());
+    assert_eq!(coord.unwrap().x(), 1.0);
+    assert_eq!(coord.unwrap().y(), 2.0);
 }
