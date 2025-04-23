@@ -69,10 +69,10 @@ impl<'a> GeometryCollection<'a> {
     }
 }
 
-impl GeometryCollectionTrait for GeometryCollection<'_> {
+impl<'a> GeometryCollectionTrait for GeometryCollection<'a> {
     type T = f64;
     type GeometryType<'b>
-        = &'b Wkb<'b>
+        = &'b Wkb<'a>
     where
         Self: 'b;
 

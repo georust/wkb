@@ -100,7 +100,7 @@ impl<'a> MultiPointTrait for MultiPoint<'a> {
     }
 }
 
-impl<'a> MultiPointTrait for &'a MultiPoint<'a> {
+impl<'a> MultiPointTrait for &MultiPoint<'a> {
     type T = f64;
     type PointType<'b>
         = Point<'a>

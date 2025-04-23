@@ -95,7 +95,7 @@ impl<'a> MultiPolygonTrait for MultiPolygon<'a> {
     }
 }
 
-impl<'a> MultiPolygonTrait for &'a MultiPolygon<'a> {
+impl<'a> MultiPolygonTrait for &MultiPolygon<'a> {
     type T = f64;
     type PolygonType<'b>
         = Polygon<'a>

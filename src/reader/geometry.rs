@@ -180,7 +180,7 @@ impl<'a> GeometryTrait for Wkb<'a> {
     }
 }
 
-impl<'a> GeometryTrait for &'a Wkb<'a> {
+impl<'a> GeometryTrait for &Wkb<'a> {
     type T = f64;
     type PointType<'b>
         = Point<'a>
