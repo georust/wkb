@@ -4,7 +4,7 @@
 
 - Your change here.
 - Expose `wkb::reader::Wkb` type through public API.
-- Making lifetime annotations of `Wkb` more permissive.
+- Make lifetime annotations of `Wkb` more permissive. (#59)
 
 ## 0.8.0 - 2024-12-03
 
