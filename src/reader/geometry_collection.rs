@@ -5,7 +5,7 @@ use crate::error::WKBResult;
 use crate::reader::util::{has_srid, ReadBytesExt};
 use crate::reader::Wkb;
 use crate::Endianness;
-use geo_traits::{Dimensions, GeometryCollectionTrait};
+use geo_traits::GeometryCollectionTrait;
 
 /// skip endianness and wkb type
 const HEADER_BYTES: u64 = 5;
@@ -70,15 +70,10 @@ impl<'a> GeometryCollection<'a> {
 }
 
 impl<'a> GeometryCollectionTrait for GeometryCollection<'a> {
-    type T = f64;
     type GeometryType<'b>
         = &'b Wkb<'a>
     where
         Self: 'b;
-
-    fn dim(&self) -> Dimensions {
-        self.dim.into()
-    }
 
     fn num_geometries(&self) -> usize {
         self.geometries.len()

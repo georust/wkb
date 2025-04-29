@@ -4,7 +4,6 @@ use crate::common::WKBDimension;
 use crate::reader::polygon::Polygon;
 use crate::reader::util::{has_srid, ReadBytesExt};
 use crate::Endianness;
-use geo_traits::Dimensions;
 use geo_traits::MultiPolygonTrait;
 
 /// skip endianness and wkb type
@@ -76,41 +75,31 @@ impl<'a> MultiPolygon<'a> {
 }
 
 impl<'a> MultiPolygonTrait for MultiPolygon<'a> {
-    type T = f64;
-    type PolygonType<'b>
+    type InnerPolygonType<'b>
         = &'b Polygon<'a>
     where
         Self: 'b;
-
-    fn dim(&self) -> Dimensions {
-        self.dim.into()
-    }
 
     fn num_polygons(&self) -> usize {
         self.wkb_polygons.len()
     }
 
-    unsafe fn polygon_unchecked(&self, i: usize) -> Self::PolygonType<'_> {
+    unsafe fn polygon_unchecked(&self, i: usize) -> Self::InnerPolygonType<'_> {
         self.wkb_polygons.get_unchecked(i)
     }
 }
 
 impl<'a, 'b> MultiPolygonTrait for &'b MultiPolygon<'a> {
-    type T = f64;
-    type PolygonType<'c>
+    type InnerPolygonType<'c>
         = &'b Polygon<'a>
     where
         Self: 'c;
-
-    fn dim(&self) -> Dimensions {
-        self.dim.into()
-    }
 
     fn num_polygons(&self) -> usize {
         self.wkb_polygons.len()
     }
 
-    unsafe fn polygon_unchecked(&self, i: usize) -> Self::PolygonType<'_> {
+    unsafe fn polygon_unchecked(&self, i: usize) -> Self::InnerPolygonType<'_> {
         self.wkb_polygons.get_unchecked(i)
     }
 }

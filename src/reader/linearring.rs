@@ -4,7 +4,6 @@ use crate::common::WKBDimension;
 use crate::reader::coord::Coord;
 use crate::reader::util::ReadBytesExt;
 use crate::Endianness;
-use geo_traits::Dimensions;
 use geo_traits::LineStringTrait;
 
 /// A linear ring in a WKB buffer.
@@ -63,18 +62,17 @@ impl<'a> WKBLinearRing<'a> {
     pub fn coord_offset(&self, i: u64) -> u64 {
         self.offset + 4 + (self.dim.size() as u64 * 8 * i)
     }
+
+    pub fn dimension(&self) -> WKBDimension {
+        self.dim
+    }
 }
 
 impl<'a> LineStringTrait for WKBLinearRing<'a> {
-    type T = f64;
     type CoordType<'b>
         = Coord<'a>
     where
         Self: 'b;
-
-    fn dim(&self) -> Dimensions {
-        self.dim.into()
-    }
 
     #[inline]
     fn num_coords(&self) -> usize {
@@ -93,15 +91,10 @@ impl<'a> LineStringTrait for WKBLinearRing<'a> {
 }
 
 impl<'a> LineStringTrait for &WKBLinearRing<'a> {
-    type T = f64;
     type CoordType<'c>
         = Coord<'a>
     where
         Self: 'c;
-
-    fn dim(&self) -> Dimensions {
-        self.dim.into()
-    }
 
     #[inline]
     fn num_coords(&self) -> usize {
