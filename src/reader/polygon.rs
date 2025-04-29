@@ -77,7 +77,7 @@ impl<'a> Polygon<'a> {
 impl<'a> PolygonTrait for Polygon<'a> {
     type T = f64;
     type RingType<'b>
-        = WKBLinearRing<'a>
+        = &'b WKBLinearRing<'a>
     where
         Self: 'b;
 
@@ -98,21 +98,21 @@ impl<'a> PolygonTrait for Polygon<'a> {
         if self.wkb_linear_rings.is_empty() {
             None
         } else {
-            Some(self.wkb_linear_rings[0])
+            Some(&self.wkb_linear_rings[0])
         }
     }
 
     unsafe fn interior_unchecked(&self, i: usize) -> Self::RingType<'_> {
-        *self.wkb_linear_rings.get_unchecked(i + 1)
+        self.wkb_linear_rings.get_unchecked(i + 1)
     }
 }
 
-impl<'a> PolygonTrait for &Polygon<'a> {
+impl<'a, 'b> PolygonTrait for &'b Polygon<'a> {
     type T = f64;
-    type RingType<'b>
-        = WKBLinearRing<'a>
+    type RingType<'c>
+        = &'b WKBLinearRing<'a>
     where
-        Self: 'b;
+        Self: 'c;
 
     fn dim(&self) -> Dimensions {
         self.dim.into()
@@ -131,11 +131,11 @@ impl<'a> PolygonTrait for &Polygon<'a> {
         if self.wkb_linear_rings.is_empty() {
             None
         } else {
-            Some(self.wkb_linear_rings[0])
+            Some(&self.wkb_linear_rings[0])
         }
     }
 
     unsafe fn interior_unchecked(&self, i: usize) -> Self::RingType<'_> {
-        *self.wkb_linear_rings.get_unchecked(i + 1)
+        self.wkb_linear_rings.get_unchecked(i + 1)
     }
 }

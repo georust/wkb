@@ -78,7 +78,7 @@ impl<'a> MultiPolygon<'a> {
 impl<'a> MultiPolygonTrait for MultiPolygon<'a> {
     type T = f64;
     type PolygonType<'b>
-        = Polygon<'a>
+        = &'b Polygon<'a>
     where
         Self: 'b;
 
@@ -91,16 +91,16 @@ impl<'a> MultiPolygonTrait for MultiPolygon<'a> {
     }
 
     unsafe fn polygon_unchecked(&self, i: usize) -> Self::PolygonType<'_> {
-        self.wkb_polygons.get_unchecked(i).clone()
+        self.wkb_polygons.get_unchecked(i)
     }
 }
 
-impl<'a> MultiPolygonTrait for &MultiPolygon<'a> {
+impl<'a, 'b> MultiPolygonTrait for &'b MultiPolygon<'a> {
     type T = f64;
-    type PolygonType<'b>
-        = Polygon<'a>
+    type PolygonType<'c>
+        = &'b Polygon<'a>
     where
-        Self: 'b;
+        Self: 'c;
 
     fn dim(&self) -> Dimensions {
         self.dim.into()
@@ -111,6 +111,6 @@ impl<'a> MultiPolygonTrait for &MultiPolygon<'a> {
     }
 
     unsafe fn polygon_unchecked(&self, i: usize) -> Self::PolygonType<'_> {
-        self.wkb_polygons.get_unchecked(i).clone()
+        self.wkb_polygons.get_unchecked(i)
     }
 }

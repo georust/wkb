@@ -91,3 +91,30 @@ impl<'a> LineStringTrait for WKBLinearRing<'a> {
         )
     }
 }
+
+impl<'a> LineStringTrait for &WKBLinearRing<'a> {
+    type T = f64;
+    type CoordType<'c>
+        = Coord<'a>
+    where
+        Self: 'c;
+
+    fn dim(&self) -> Dimensions {
+        self.dim.into()
+    }
+
+    #[inline]
+    fn num_coords(&self) -> usize {
+        self.num_points
+    }
+
+    #[inline]
+    unsafe fn coord_unchecked(&self, i: usize) -> Self::CoordType<'_> {
+        Coord::new(
+            self.buf,
+            self.byte_order,
+            self.coord_offset(i.try_into().unwrap()),
+            self.dim,
+        )
+    }
+}

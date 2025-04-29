@@ -79,7 +79,7 @@ impl<'a> MultiLineString<'a> {
 impl<'a> MultiLineStringTrait for MultiLineString<'a> {
     type T = f64;
     type LineStringType<'b>
-        = LineString<'a>
+        = &'b LineString<'a>
     where
         Self: 'b;
 
@@ -92,16 +92,16 @@ impl<'a> MultiLineStringTrait for MultiLineString<'a> {
     }
 
     unsafe fn line_string_unchecked(&self, i: usize) -> Self::LineStringType<'_> {
-        *self.wkb_line_strings.get_unchecked(i)
+        self.wkb_line_strings.get_unchecked(i)
     }
 }
 
-impl<'a> MultiLineStringTrait for &MultiLineString<'a> {
+impl<'a, 'b> MultiLineStringTrait for &'b MultiLineString<'a> {
     type T = f64;
-    type LineStringType<'b>
-        = LineString<'a>
+    type LineStringType<'c>
+        = &'b LineString<'a>
     where
-        Self: 'b;
+        Self: 'c;
 
     fn dim(&self) -> Dimensions {
         self.dim.into()
@@ -112,6 +112,6 @@ impl<'a> MultiLineStringTrait for &MultiLineString<'a> {
     }
 
     unsafe fn line_string_unchecked(&self, i: usize) -> Self::LineStringType<'_> {
-        *self.wkb_line_strings.get_unchecked(i)
+        self.wkb_line_strings.get_unchecked(i)
     }
 }
