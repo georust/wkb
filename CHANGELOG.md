@@ -5,6 +5,7 @@
 - Your change here.
 - Expose `wkb::reader::Wkb` type through public API.
 - Make lifetime annotations of `Wkb` more permissive. (#59)
+- Define associated types as references for geo-traits implementations of MultiLineString, Polygon and MultiPolygon to avoid creating unnecessary copies. (#61)
 
 ## 0.8.0 - 2024-12-03
 
