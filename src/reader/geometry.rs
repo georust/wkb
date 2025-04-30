@@ -260,34 +260,34 @@ impl<'a> GeometryTrait for &Wkb<'a> {
 
 macro_rules! impl_specialization {
     ($geometry_type:ident) => {
-        impl GeometryTrait for $geometry_type<'_> {
+        impl<'a> GeometryTrait for $geometry_type<'a> {
             type T = f64;
             type PointType<'b>
-                = Point<'b>
+                = Point<'a>
             where
                 Self: 'b;
             type LineStringType<'b>
-                = LineString<'b>
+                = LineString<'a>
             where
                 Self: 'b;
             type PolygonType<'b>
-                = Polygon<'b>
+                = Polygon<'a>
             where
                 Self: 'b;
             type MultiPointType<'b>
-                = MultiPoint<'b>
+                = MultiPoint<'a>
             where
                 Self: 'b;
             type MultiLineStringType<'b>
-                = MultiLineString<'b>
+                = MultiLineString<'a>
             where
                 Self: 'b;
             type MultiPolygonType<'b>
-                = MultiPolygon<'b>
+                = MultiPolygon<'a>
             where
                 Self: 'b;
             type GeometryCollectionType<'b>
-                = GeometryCollection<'b>
+                = GeometryCollection<'a>
             where
                 Self: 'b;
             type RectType<'b>
@@ -311,13 +311,13 @@ macro_rules! impl_specialization {
                 &self,
             ) -> geo_traits::GeometryType<
                 '_,
-                Point,
-                LineString,
-                Polygon,
-                MultiPoint,
-                MultiLineString,
-                MultiPolygon,
-                GeometryCollection,
+                Point<'a>,
+                LineString<'a>,
+                Polygon<'a>,
+                MultiPoint<'a>,
+                MultiLineString<'a>,
+                MultiPolygon<'a>,
+                GeometryCollection<'a>,
                 Self::RectType<'_>,
                 Self::TriangleType<'_>,
                 Self::LineType<'_>,
@@ -326,34 +326,34 @@ macro_rules! impl_specialization {
             }
         }
 
-        impl<'a> GeometryTrait for &'a $geometry_type<'_> {
+        impl<'a> GeometryTrait for &$geometry_type<'a> {
             type T = f64;
             type PointType<'b>
-                = Point<'b>
+                = Point<'a>
             where
                 Self: 'b;
             type LineStringType<'b>
-                = LineString<'b>
+                = LineString<'a>
             where
                 Self: 'b;
             type PolygonType<'b>
-                = Polygon<'b>
+                = Polygon<'a>
             where
                 Self: 'b;
             type MultiPointType<'b>
-                = MultiPoint<'b>
+                = MultiPoint<'a>
             where
                 Self: 'b;
             type MultiLineStringType<'b>
-                = MultiLineString<'b>
+                = MultiLineString<'a>
             where
                 Self: 'b;
             type MultiPolygonType<'b>
-                = MultiPolygon<'b>
+                = MultiPolygon<'a>
             where
                 Self: 'b;
             type GeometryCollectionType<'b>
-                = GeometryCollection<'b>
+                = GeometryCollection<'a>
             where
                 Self: 'b;
             type RectType<'b>
@@ -377,13 +377,13 @@ macro_rules! impl_specialization {
                 &self,
             ) -> geo_traits::GeometryType<
                 '_,
-                Point,
-                LineString,
-                Polygon,
-                MultiPoint,
-                MultiLineString,
-                MultiPolygon,
-                GeometryCollection,
+                Point<'a>,
+                LineString<'a>,
+                Polygon<'a>,
+                MultiPoint<'a>,
+                MultiLineString<'a>,
+                MultiPolygon<'a>,
+                GeometryCollection<'a>,
                 Self::RectType<'_>,
                 Self::TriangleType<'_>,
                 Self::LineType<'_>,
