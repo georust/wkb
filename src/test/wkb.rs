@@ -187,17 +187,15 @@ fn wkb_geo_traits_specialized_lifetime() {
     ];
     let coord = {
         let wkb = read_wkb(&buf).unwrap();
-        match wkb.as_type() {
-            geo_traits::GeometryType::Point(point) => match point.as_type() {
-                geo_traits::GeometryType::Point(point) => point.coord(),
-                _ => {
-                    panic!("Expected Point");
-                }
-            },
-            _ => {
-                panic!("Expected Point");
-            }
-        }
+        let geo_traits::GeometryType::Point(point) = wkb.as_type() else {
+            panic!("Expected Point");
+        };
+
+        let geo_traits::GeometryType::Point(point) = point.as_type() else {
+            panic!("Expected Point");
+        };
+
+        point.coord()
     };
 
     assert!(coord.is_some());
