@@ -1,5 +1,5 @@
 use geo_traits::to_geo::ToGeoGeometry;
-use geo_traits::{CoordTrait, GeometryTrait, LineStringTrait};
+use geo_traits::{CoordTrait, GeometryTrait, LineStringTrait, PointTrait};
 use geo_types::Geometry;
 
 use crate::reader::read_wkb;
@@ -170,6 +170,32 @@ fn wkb_geo_traits_lifetime() {
                 panic!("Expected LineString");
             }
         }
+    };
+
+    assert!(coord.is_some());
+    assert_eq!(coord.unwrap().x(), 1.0);
+    assert_eq!(coord.unwrap().y(), 2.0);
+}
+
+#[test]
+fn wkb_geo_traits_specialized_lifetime() {
+    let buf = vec![
+        0x01, // little endian
+        0x01, 0x00, 0x00, 0x00, // type: Point (1)
+        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xF0, 0x3F, // x: 1.0
+        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x40, // y: 2.0
+    ];
+    let coord = {
+        let wkb = read_wkb(&buf).unwrap();
+        let geo_traits::GeometryType::Point(point) = wkb.as_type() else {
+            panic!("Expected Point");
+        };
+
+        let geo_traits::GeometryType::Point(point) = point.as_type() else {
+            panic!("Expected Point");
+        };
+
+        point.coord()
     };
 
     assert!(coord.is_some());
