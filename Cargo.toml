@@ -29,5 +29,9 @@ wkt = "0.12"
 name = "parse"
 harness = false
 
+[[bench]]
+name = "brect"
+harness = false
+
 [lib]
 doctest = true
