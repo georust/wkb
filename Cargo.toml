@@ -23,7 +23,7 @@ bytes = "1.5.0"
 criterion = { version = "0.5", features = ["html_reports"] }
 geo-types = "0.7.13"
 geos = { version = "10", features = ["geo"] }
-wkt = "0.12"
+wkt = "0.13"
 
 [[bench]]
 name = "parse"
@@ -35,3 +35,7 @@ harness = false
 
 [lib]
 doctest = true
+
+[patch.crates-io]
+geo-traits = { git = "https://github.com/georust/geo", branch = "main", package = "geo-traits" }
+wkt = { git = "https://github.com/wherobots/wkt", branch = "adapt-new-geo-traits" }

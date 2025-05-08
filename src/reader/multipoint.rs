@@ -4,7 +4,6 @@ use crate::common::WKBDimension;
 use crate::reader::point::Point;
 use crate::reader::util::{has_srid, ReadBytesExt};
 use crate::Endianness;
-use geo_traits::Dimensions;
 use geo_traits::MultiPointTrait;
 
 /// A WKB MultiPoint
@@ -76,21 +75,16 @@ impl<'a> MultiPoint<'a> {
 }
 
 impl<'a> MultiPointTrait for MultiPoint<'a> {
-    type T = f64;
-    type PointType<'b>
+    type InnerPointType<'b>
         = Point<'a>
     where
         Self: 'b;
-
-    fn dim(&self) -> Dimensions {
-        self.dim.into()
-    }
 
     fn num_points(&self) -> usize {
         self.num_points
     }
 
-    unsafe fn point_unchecked(&self, i: usize) -> Self::PointType<'_> {
+    unsafe fn point_unchecked(&self, i: usize) -> Self::InnerPointType<'_> {
         Point::new(
             self.buf,
             self.byte_order,
@@ -101,21 +95,16 @@ impl<'a> MultiPointTrait for MultiPoint<'a> {
 }
 
 impl<'a> MultiPointTrait for &MultiPoint<'a> {
-    type T = f64;
-    type PointType<'b>
+    type InnerPointType<'b>
         = Point<'a>
     where
         Self: 'b;
-
-    fn dim(&self) -> Dimensions {
-        self.dim.into()
-    }
 
     fn num_points(&self) -> usize {
         self.num_points
     }
 
-    unsafe fn point_unchecked(&self, i: usize) -> Self::PointType<'_> {
+    unsafe fn point_unchecked(&self, i: usize) -> Self::InnerPointType<'_> {
         Point::new(
             self.buf,
             self.byte_order,

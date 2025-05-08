@@ -4,7 +4,6 @@ use crate::common::WKBDimension;
 use crate::reader::linestring::LineString;
 use crate::reader::util::{has_srid, ReadBytesExt};
 use crate::Endianness;
-use geo_traits::Dimensions;
 use geo_traits::MultiLineStringTrait;
 
 const HEADER_BYTES: u64 = 5;
@@ -77,41 +76,31 @@ impl<'a> MultiLineString<'a> {
 }
 
 impl<'a> MultiLineStringTrait for MultiLineString<'a> {
-    type T = f64;
-    type LineStringType<'b>
+    type InnerLineStringType<'b>
         = &'b LineString<'a>
     where
         Self: 'b;
-
-    fn dim(&self) -> Dimensions {
-        self.dim.into()
-    }
 
     fn num_line_strings(&self) -> usize {
         self.wkb_line_strings.len()
     }
 
-    unsafe fn line_string_unchecked(&self, i: usize) -> Self::LineStringType<'_> {
+    unsafe fn line_string_unchecked(&self, i: usize) -> Self::InnerLineStringType<'_> {
         self.wkb_line_strings.get_unchecked(i)
     }
 }
 
 impl<'a, 'b> MultiLineStringTrait for &'b MultiLineString<'a> {
-    type T = f64;
-    type LineStringType<'c>
+    type InnerLineStringType<'c>
         = &'b LineString<'a>
     where
         Self: 'c;
-
-    fn dim(&self) -> Dimensions {
-        self.dim.into()
-    }
 
     fn num_line_strings(&self) -> usize {
         self.wkb_line_strings.len()
     }
 
-    unsafe fn line_string_unchecked(&self, i: usize) -> Self::LineStringType<'_> {
+    unsafe fn line_string_unchecked(&self, i: usize) -> Self::InnerLineStringType<'_> {
         self.wkb_line_strings.get_unchecked(i)
     }
 }

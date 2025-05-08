@@ -12,6 +12,8 @@ use geo_traits::{
     Dimensions, GeometryTrait, UnimplementedLine, UnimplementedRect, UnimplementedTriangle,
 };
 
+use super::linearring::WKBLinearRing;
+
 /// Parse a WKB byte slice into a geometry.
 ///
 /// An opaque object that implements [`GeometryTrait`]. Use methods provided by [`geo_traits`] to
@@ -401,3 +403,140 @@ impl_specialization!(MultiPoint);
 impl_specialization!(MultiLineString);
 impl_specialization!(MultiPolygon);
 impl_specialization!(GeometryCollection);
+
+impl<'a> GeometryTrait for WKBLinearRing<'a> {
+    type T = f64;
+
+    type PointType<'c>
+        = Point<'a>
+    where
+        Self: 'c;
+    type LineStringType<'c>
+        = WKBLinearRing<'a>
+    where
+        Self: 'c;
+    type PolygonType<'c>
+        = Polygon<'a>
+    where
+        Self: 'c;
+    type MultiPointType<'c>
+        = MultiPoint<'a>
+    where
+        Self: 'c;
+    type MultiLineStringType<'c>
+        = MultiLineString<'a>
+    where
+        Self: 'c;
+    type MultiPolygonType<'c>
+        = MultiPolygon<'a>
+    where
+        Self: 'c;
+    type GeometryCollectionType<'c>
+        = GeometryCollection<'a>
+    where
+        Self: 'c;
+    type RectType<'c>
+        = UnimplementedRect<f64>
+    where
+        Self: 'c;
+    type TriangleType<'c>
+        = UnimplementedTriangle<f64>
+    where
+        Self: 'c;
+    type LineType<'c>
+        = UnimplementedLine<f64>
+    where
+        Self: 'c;
+
+    fn dim(&self) -> Dimensions {
+        self.dimension().into()
+    }
+
+    fn as_type(
+        &self,
+    ) -> geo_traits::GeometryType<
+        '_,
+        Point<'a>,
+        WKBLinearRing<'a>,
+        Polygon<'a>,
+        MultiPoint<'a>,
+        MultiLineString<'a>,
+        MultiPolygon<'a>,
+        GeometryCollection<'a>,
+        UnimplementedRect<f64>,
+        UnimplementedTriangle<f64>,
+        UnimplementedLine<f64>,
+    > {
+        geo_traits::GeometryType::LineString(self)
+    }
+}
+
+impl<'a, 'b> GeometryTrait for &'b WKBLinearRing<'a>
+where
+    'a: 'b,
+{
+    type T = f64;
+
+    type PointType<'c>
+        = Point<'a>
+    where
+        Self: 'c;
+    type LineStringType<'c>
+        = WKBLinearRing<'a>
+    where
+        Self: 'c;
+    type PolygonType<'c>
+        = Polygon<'a>
+    where
+        Self: 'c;
+    type MultiPointType<'c>
+        = MultiPoint<'a>
+    where
+        Self: 'c;
+    type MultiLineStringType<'c>
+        = MultiLineString<'a>
+    where
+        Self: 'c;
+    type MultiPolygonType<'c>
+        = MultiPolygon<'a>
+    where
+        Self: 'c;
+    type GeometryCollectionType<'c>
+        = GeometryCollection<'a>
+    where
+        Self: 'c;
+    type RectType<'c>
+        = UnimplementedRect<f64>
+    where
+        Self: 'c;
+    type TriangleType<'c>
+        = UnimplementedTriangle<f64>
+    where
+        Self: 'c;
+    type LineType<'c>
+        = UnimplementedLine<f64>
+    where
+        Self: 'c;
+
+    fn dim(&self) -> Dimensions {
+        self.dimension().into()
+    }
+
+    fn as_type(
+        &self,
+    ) -> geo_traits::GeometryType<
+        '_,
+        Point<'a>,
+        WKBLinearRing<'a>,
+        Polygon<'a>,
+        MultiPoint<'a>,
+        MultiLineString<'a>,
+        MultiPolygon<'a>,
+        GeometryCollection<'a>,
+        UnimplementedRect<f64>,
+        UnimplementedTriangle<f64>,
+        UnimplementedLine<f64>,
+    > {
+        geo_traits::GeometryType::LineString(self)
+    }
+}
