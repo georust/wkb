@@ -3,6 +3,7 @@
 ## Unreleased
 
 - Your change here.
+- Expose `GeometryType` and `Dimension` from parsed `Wkb` object (#65).
 - Expose `wkb::reader::Wkb` type through public API.
 - Make lifetime annotations of `Wkb` more permissive. (#59)
 - Define associated types as references for geo-traits implementations of MultiLineString, Polygon and MultiPolygon to avoid creating unnecessary copies. (#61)
