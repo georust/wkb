@@ -35,12 +35,7 @@ pub struct Coord<'a> {
 }
 
 impl<'a> Coord<'a> {
-    pub(crate) fn new(
-        buf: &'a [u8],
-        byte_order: Endianness,
-        offset: u64,
-        dim: Dimension,
-    ) -> Self {
+    pub(crate) fn new(buf: &'a [u8], byte_order: Endianness, offset: u64, dim: Dimension) -> Self {
         Self {
             buf,
             byte_order,
