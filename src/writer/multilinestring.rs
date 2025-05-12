@@ -1,5 +1,5 @@
-use crate::common::WKBType;
-use crate::error::WKBResult;
+use crate::common::WkbType;
+use crate::error::WkbResult;
 use crate::writer::linestring::{line_string_wkb_size, write_line_string};
 use crate::Endianness;
 use byteorder::{BigEndian, ByteOrder, LittleEndian, WriteBytesExt};
@@ -21,7 +21,7 @@ pub fn write_multi_line_string(
     writer: &mut impl Write,
     geom: &impl MultiLineStringTrait<T = f64>,
     endianness: Endianness,
-) -> WKBResult<()> {
+) -> WkbResult<()> {
     // Byte order
     writer.write_u8(endianness.into())?;
 
@@ -40,8 +40,8 @@ fn write_multi_line_string_content<B: ByteOrder>(
     writer: &mut impl Write,
     geom: &impl MultiLineStringTrait<T = f64>,
     endianness: Endianness,
-) -> WKBResult<()> {
-    let wkb_type = WKBType::MultiLineString(geom.dim().try_into()?);
+) -> WkbResult<()> {
+    let wkb_type = WkbType::MultiLineString(geom.dim().try_into()?);
     writer.write_u32::<B>(wkb_type.into())?;
 
     // numPoints

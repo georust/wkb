@@ -1,7 +1,7 @@
 use std::io::Cursor;
 
-use crate::common::WKBDimension;
-use crate::reader::linearring::WKBLinearRing;
+use crate::common::WkbDimension;
+use crate::reader::linearring::LinearRing;
 use crate::reader::util::{has_srid, ReadBytesExt};
 use crate::Endianness;
 use geo_traits::Dimensions;
@@ -15,13 +15,13 @@ const HEADER_BYTES: u64 = 5;
 /// This has been preprocessed, so access to any internal coordinate is `O(1)`.
 #[derive(Debug, Clone)]
 pub struct Polygon<'a> {
-    wkb_linear_rings: Vec<WKBLinearRing<'a>>,
-    dim: WKBDimension,
+    wkb_linear_rings: Vec<LinearRing<'a>>,
+    dim: WkbDimension,
     has_srid: bool,
 }
 
 impl<'a> Polygon<'a> {
-    pub fn new(buf: &'a [u8], byte_order: Endianness, mut offset: u64, dim: WKBDimension) -> Self {
+    pub fn new(buf: &'a [u8], byte_order: Endianness, mut offset: u64, dim: WkbDimension) -> Self {
         let has_srid = has_srid(buf, byte_order, offset);
         if has_srid {
             offset += 4;
@@ -39,7 +39,7 @@ impl<'a> Polygon<'a> {
         let mut ring_offset = offset + 1 + 4 + 4;
         let mut wkb_linear_rings = Vec::with_capacity(num_rings);
         for _ in 0..num_rings {
-            let polygon = WKBLinearRing::new(buf, byte_order, ring_offset, dim);
+            let polygon = LinearRing::new(buf, byte_order, ring_offset, dim);
             wkb_linear_rings.push(polygon);
             ring_offset += polygon.size();
         }
@@ -69,7 +69,7 @@ impl<'a> Polygon<'a> {
             .fold(header, |acc, ring| acc + ring.size())
     }
 
-    pub fn dimension(&self) -> WKBDimension {
+    pub fn dimension(&self) -> WkbDimension {
         self.dim
     }
 }
@@ -77,7 +77,7 @@ impl<'a> Polygon<'a> {
 impl<'a> PolygonTrait for Polygon<'a> {
     type T = f64;
     type RingType<'b>
-        = &'b WKBLinearRing<'a>
+        = &'b LinearRing<'a>
     where
         Self: 'b;
 
@@ -110,7 +110,7 @@ impl<'a> PolygonTrait for Polygon<'a> {
 impl<'a, 'b> PolygonTrait for &'b Polygon<'a> {
     type T = f64;
     type RingType<'c>
-        = &'b WKBLinearRing<'a>
+        = &'b LinearRing<'a>
     where
         Self: 'c;
 

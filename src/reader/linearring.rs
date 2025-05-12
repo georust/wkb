@@ -1,6 +1,6 @@
 use std::io::Cursor;
 
-use crate::common::WKBDimension;
+use crate::common::WkbDimension;
 use crate::reader::coord::Coord;
 use crate::reader::util::ReadBytesExt;
 use crate::Endianness;
@@ -13,7 +13,7 @@ use geo_traits::LineStringTrait;
 ///
 /// See page 65 of <https://portal.ogc.org/files/?artifact_id=25355>.
 #[derive(Debug, Clone, Copy)]
-pub struct WKBLinearRing<'a> {
+pub struct LinearRing<'a> {
     /// The underlying WKB buffer
     buf: &'a [u8],
 
@@ -31,11 +31,11 @@ pub struct WKBLinearRing<'a> {
     /// The number of points in this linear ring
     num_points: usize,
 
-    dim: WKBDimension,
+    dim: WkbDimension,
 }
 
-impl<'a> WKBLinearRing<'a> {
-    pub fn new(buf: &'a [u8], byte_order: Endianness, offset: u64, dim: WKBDimension) -> Self {
+impl<'a> LinearRing<'a> {
+    pub fn new(buf: &'a [u8], byte_order: Endianness, offset: u64, dim: WkbDimension) -> Self {
         let mut reader = Cursor::new(buf);
         reader.set_position(offset);
         let num_points = reader.read_u32(byte_order).unwrap().try_into().unwrap();
@@ -65,7 +65,7 @@ impl<'a> WKBLinearRing<'a> {
     }
 }
 
-impl<'a> LineStringTrait for WKBLinearRing<'a> {
+impl<'a> LineStringTrait for LinearRing<'a> {
     type T = f64;
     type CoordType<'b>
         = Coord<'a>
@@ -92,7 +92,7 @@ impl<'a> LineStringTrait for WKBLinearRing<'a> {
     }
 }
 
-impl<'a> LineStringTrait for &WKBLinearRing<'a> {
+impl<'a> LineStringTrait for &LinearRing<'a> {
     type T = f64;
     type CoordType<'c>
         = Coord<'a>

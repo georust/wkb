@@ -1,6 +1,6 @@
 use std::io::Cursor;
 
-use crate::common::WKBDimension;
+use crate::common::WkbDimension;
 use crate::reader::polygon::Polygon;
 use crate::reader::util::{has_srid, ReadBytesExt};
 use crate::Endianness;
@@ -16,12 +16,12 @@ pub struct MultiPolygon<'a> {
     /// A Polygon object for each of the internal line strings
     wkb_polygons: Vec<Polygon<'a>>,
 
-    dim: WKBDimension,
+    dim: WkbDimension,
     has_srid: bool,
 }
 
 impl<'a> MultiPolygon<'a> {
-    pub(crate) fn new(buf: &'a [u8], byte_order: Endianness, dim: WKBDimension) -> Self {
+    pub(crate) fn new(buf: &'a [u8], byte_order: Endianness, dim: WkbDimension) -> Self {
         let mut offset = 0;
         let has_srid = has_srid(buf, byte_order, offset);
         if has_srid {
@@ -70,7 +70,7 @@ impl<'a> MultiPolygon<'a> {
             .fold(header, |acc, x| acc + x.size())
     }
 
-    pub fn dimension(&self) -> WKBDimension {
+    pub fn dimension(&self) -> WkbDimension {
         self.dim
     }
 }

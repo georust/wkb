@@ -1,6 +1,6 @@
 use std::io::Cursor;
 
-use crate::common::WKBDimension;
+use crate::common::WkbDimension;
 use crate::reader::point::Point;
 use crate::reader::util::{has_srid, ReadBytesExt};
 use crate::Endianness;
@@ -17,12 +17,12 @@ pub struct MultiPoint<'a> {
 
     /// The number of points in this multi point
     num_points: usize,
-    dim: WKBDimension,
+    dim: WkbDimension,
     has_srid: bool,
 }
 
 impl<'a> MultiPoint<'a> {
-    pub(crate) fn new(buf: &'a [u8], byte_order: Endianness, dim: WKBDimension) -> Self {
+    pub(crate) fn new(buf: &'a [u8], byte_order: Endianness, dim: WkbDimension) -> Self {
         let mut offset = 0;
         let has_srid = has_srid(buf, byte_order, offset);
         if has_srid {
@@ -70,7 +70,7 @@ impl<'a> MultiPoint<'a> {
         header + ((1 + 4 + (self.dim.size() as u64 * 8)) * i)
     }
 
-    pub fn dimension(&self) -> WKBDimension {
+    pub fn dimension(&self) -> WkbDimension {
         self.dim
     }
 }
