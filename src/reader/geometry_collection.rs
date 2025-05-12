@@ -1,6 +1,6 @@
 use std::io::Cursor;
 
-use crate::common::WKBDimension;
+use crate::common::Dimension;
 use crate::error::WKBResult;
 use crate::reader::util::{has_srid, ReadBytesExt};
 use crate::reader::Wkb;
@@ -15,12 +15,12 @@ const HEADER_BYTES: u64 = 5;
 pub struct GeometryCollection<'a> {
     /// A WKB object for each of the internal geometries
     geometries: Vec<Wkb<'a>>,
-    dim: WKBDimension,
+    dim: Dimension,
     has_srid: bool,
 }
 
 impl<'a> GeometryCollection<'a> {
-    pub fn try_new(buf: &'a [u8], byte_order: Endianness, dim: WKBDimension) -> WKBResult<Self> {
+    pub fn try_new(buf: &'a [u8], byte_order: Endianness, dim: Dimension) -> WKBResult<Self> {
         let mut offset = 0;
         let has_srid = has_srid(buf, byte_order, offset);
         if has_srid {
@@ -53,7 +53,7 @@ impl<'a> GeometryCollection<'a> {
         })
     }
 
-    pub fn dimension(&self) -> WKBDimension {
+    pub fn dimension(&self) -> Dimension {
         self.dim
     }
 

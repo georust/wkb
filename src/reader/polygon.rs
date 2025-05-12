@@ -1,6 +1,6 @@
 use std::io::Cursor;
 
-use crate::common::WKBDimension;
+use crate::common::Dimension;
 use crate::reader::linearring::WKBLinearRing;
 use crate::reader::util::{has_srid, ReadBytesExt};
 use crate::Endianness;
@@ -16,12 +16,12 @@ const HEADER_BYTES: u64 = 5;
 #[derive(Debug, Clone)]
 pub struct Polygon<'a> {
     wkb_linear_rings: Vec<WKBLinearRing<'a>>,
-    dim: WKBDimension,
+    dim: Dimension,
     has_srid: bool,
 }
 
 impl<'a> Polygon<'a> {
-    pub fn new(buf: &'a [u8], byte_order: Endianness, mut offset: u64, dim: WKBDimension) -> Self {
+    pub fn new(buf: &'a [u8], byte_order: Endianness, mut offset: u64, dim: Dimension) -> Self {
         let has_srid = has_srid(buf, byte_order, offset);
         if has_srid {
             offset += 4;
@@ -69,7 +69,7 @@ impl<'a> Polygon<'a> {
             .fold(header, |acc, ring| acc + ring.size())
     }
 
-    pub fn dimension(&self) -> WKBDimension {
+    pub fn dimension(&self) -> Dimension {
         self.dim
     }
 }

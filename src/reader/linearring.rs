@@ -1,6 +1,6 @@
 use std::io::Cursor;
 
-use crate::common::WKBDimension;
+use crate::common::Dimension;
 use crate::reader::coord::Coord;
 use crate::reader::util::ReadBytesExt;
 use crate::Endianness;
@@ -31,11 +31,11 @@ pub struct WKBLinearRing<'a> {
     /// The number of points in this linear ring
     num_points: usize,
 
-    dim: WKBDimension,
+    dim: Dimension,
 }
 
 impl<'a> WKBLinearRing<'a> {
-    pub fn new(buf: &'a [u8], byte_order: Endianness, offset: u64, dim: WKBDimension) -> Self {
+    pub fn new(buf: &'a [u8], byte_order: Endianness, offset: u64, dim: Dimension) -> Self {
         let mut reader = Cursor::new(buf);
         reader.set_position(offset);
         let num_points = reader.read_u32(byte_order).unwrap().try_into().unwrap();
