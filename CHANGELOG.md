@@ -4,6 +4,7 @@
 
 - Your change here.
 - Expose `wkb::reader::Wkb` type through public API.
+- Ensure correct dimension when writing `Rect` to WKB. (#67)
 - Make lifetime annotations of `Wkb` more permissive. (#59)
 - Define associated types as references for geo-traits implementations of MultiLineString, Polygon and MultiPolygon to avoid creating unnecessary copies. (#61)
 - Make lifetime annotations of specialized `GeometryTrait` implementations more permissive. (#63)
