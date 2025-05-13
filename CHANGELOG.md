@@ -9,6 +9,7 @@
 - **BREAKING**: Standardize capitalization of `Wkb` in the codebase.
   - `WKBResult` is now `WkbResult`.
   - `WKBError` is now `WkbError`.
+- **BREAKING**: Change the signature of writer functions to accept a `WriterOptions` object instead of `Endianness`. This allows a future update to write an SRID value without requiring a breaking change in the future.
 - Expose `GeometryType` and `Dimension` from parsed `Wkb` object (#65).
 - Expose `wkb::reader::Wkb` type through public API.
 - Ensure correct dimension when writing `Rect` to WKB. (#67)
