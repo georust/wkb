@@ -12,7 +12,7 @@ fn load_small_wkt() -> Wkt<f64> {
 
 fn to_wkb(geom: &Wkt<f64>) -> Vec<u8> {
     let mut buffer = Vec::new();
-    wkb::writer::write_geometry(&mut buffer, geom, Default::default()).unwrap();
+    wkb::writer::write_geometry(&mut buffer, geom, &Default::default()).unwrap();
     buffer
 }
 

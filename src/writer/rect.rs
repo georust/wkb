@@ -3,8 +3,7 @@ use std::io::Write;
 use geo_traits::{CoordTrait, LineStringTrait, PolygonTrait, RectTrait};
 
 use crate::error::WkbResult;
-use crate::writer::{polygon_wkb_size, write_polygon};
-use crate::Endianness;
+use crate::writer::{polygon_wkb_size, write_polygon, WriteOptions};
 
 struct Coord2D {
     x: f64,
@@ -118,7 +117,7 @@ pub fn rect_wkb_size(geom: &impl RectTrait<T = f64>) -> usize {
 pub fn write_rect(
     writer: &mut impl Write,
     geom: &impl RectTrait<T = f64>,
-    endianness: Endianness,
+    options: &WriteOptions,
 ) -> WkbResult<()> {
-    write_polygon(writer, &RectWrapper(geom), endianness)
+    write_polygon(writer, &RectWrapper(geom), options)
 }

@@ -3,8 +3,7 @@ use std::io::Write;
 use geo_traits::{LineStringTrait, PolygonTrait, TriangleTrait};
 
 use crate::error::WkbResult;
-use crate::writer::{polygon_wkb_size, write_polygon};
-use crate::Endianness;
+use crate::writer::{polygon_wkb_size, write_polygon, WriteOptions};
 
 /// A wrapper around an impl TriangleTrait to provide LineStringTrait and PolygonTrait
 struct TriangleWrapper<'a, G: TriangleTrait<T = f64>>(&'a G);
@@ -69,7 +68,7 @@ pub fn triangle_wkb_size(geom: &impl TriangleTrait<T = f64>) -> usize {
 pub fn write_triangle(
     writer: &mut impl Write,
     geom: &impl TriangleTrait<T = f64>,
-    endianness: Endianness,
+    options: &WriteOptions,
 ) -> WkbResult<()> {
-    write_polygon(writer, &TriangleWrapper(geom), endianness)
+    write_polygon(writer, &TriangleWrapper(geom), options)
 }

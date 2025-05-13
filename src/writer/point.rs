@@ -1,6 +1,7 @@
 use crate::common::WkbType;
 use crate::error::WkbResult;
 use crate::writer::coord::write_coord;
+use crate::writer::WriteOptions;
 use crate::Endianness;
 use byteorder::{BigEndian, ByteOrder, LittleEndian, WriteBytesExt};
 use core::f64;
@@ -18,13 +19,13 @@ pub fn point_wkb_size(dim: geo_traits::Dimensions) -> usize {
 pub fn write_point(
     writer: &mut impl Write,
     geom: &impl PointTrait<T = f64>,
-    endianness: Endianness,
+    options: &WriteOptions,
 ) -> WkbResult<()> {
     // Byte order header
-    writer.write_u8(endianness.into())?;
+    writer.write_u8(options.endianness.into())?;
 
     // Content
-    match endianness {
+    match options.endianness {
         Endianness::LittleEndian => write_point_content::<LittleEndian>(writer, geom),
         Endianness::BigEndian => write_point_content::<BigEndian>(writer, geom),
     }
