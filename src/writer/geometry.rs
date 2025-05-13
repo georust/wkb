@@ -1,4 +1,4 @@
-use crate::error::WKBResult;
+use crate::error::WkbResult;
 use crate::writer::{
     geometry_collection_wkb_size, line_string_wkb_size, line_wkb_size, multi_line_string_wkb_size,
     multi_point_wkb_size, multi_polygon_wkb_size, point_wkb_size, polygon_wkb_size, rect_wkb_size,
@@ -32,7 +32,7 @@ pub fn write_geometry(
     writer: &mut impl Write,
     geom: &impl GeometryTrait<T = f64>,
     endianness: Endianness,
-) -> WKBResult<()> {
+) -> WkbResult<()> {
     use GeometryType::*;
     match geom.as_type() {
         Point(p) => write_point(writer, p, endianness),

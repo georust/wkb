@@ -1,5 +1,5 @@
-use crate::common::WKBType;
-use crate::error::WKBResult;
+use crate::common::WkbType;
+use crate::error::WkbResult;
 use crate::writer::point::{point_wkb_size, write_point};
 use crate::Endianness;
 use byteorder::{BigEndian, ByteOrder, LittleEndian, WriteBytesExt};
@@ -16,7 +16,7 @@ pub fn write_multi_point(
     writer: &mut impl Write,
     geom: &impl MultiPointTrait<T = f64>,
     endianness: Endianness,
-) -> WKBResult<()> {
+) -> WkbResult<()> {
     // Byte order
     writer.write_u8(endianness.into())?;
 
@@ -33,8 +33,8 @@ fn write_multi_point_content<B: ByteOrder>(
     writer: &mut impl Write,
     geom: &impl MultiPointTrait<T = f64>,
     endianness: Endianness,
-) -> WKBResult<()> {
-    let wkb_type = WKBType::MultiPoint(geom.dim().try_into()?);
+) -> WkbResult<()> {
+    let wkb_type = WkbType::MultiPoint(geom.dim().try_into()?);
     writer.write_u32::<B>(wkb_type.into())?;
 
     // numPoints

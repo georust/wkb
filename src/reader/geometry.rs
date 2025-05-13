@@ -2,8 +2,8 @@ use std::io::Cursor;
 
 use byteorder::ReadBytesExt;
 
-use crate::common::{WKBDimension, WKBType};
-use crate::error::WKBResult;
+use crate::common::{WkbDimension, WkbType};
+use crate::error::WkbResult;
 use crate::reader::{
     GeometryCollection, LineString, MultiLineString, MultiPoint, MultiPolygon, Point, Polygon,
 };
@@ -35,12 +35,12 @@ impl<'a> Wkb<'a> {
     /// access** but **not zero-copy**. This is because the raw WKB buffer is not 8-byte aligned,
     /// so when accessing a coordinate the underlying bytes need to be copied into a
     /// newly-allocated `f64`.
-    pub fn try_new(buf: &'a [u8]) -> WKBResult<Self> {
+    pub fn try_new(buf: &'a [u8]) -> WkbResult<Self> {
         let inner = WkbInner::try_new(buf)?;
         Ok(Self(inner))
     }
 
-    pub(crate) fn dimension(&self) -> WKBDimension {
+    pub(crate) fn dimension(&self) -> WkbDimension {
         use WkbInner::*;
         match &self.0 {
             Point(g) => g.dimension(),
@@ -80,23 +80,23 @@ pub(crate) enum WkbInner<'a> {
 }
 
 impl<'a> WkbInner<'a> {
-    fn try_new(buf: &'a [u8]) -> WKBResult<Self> {
+    fn try_new(buf: &'a [u8]) -> WkbResult<Self> {
         let mut reader = Cursor::new(buf);
         let byte_order = Endianness::try_from(reader.read_u8()?).unwrap();
-        let wkb_type = WKBType::from_buffer(buf)?;
+        let wkb_type = WkbType::from_buffer(buf)?;
 
         let out = match wkb_type {
-            WKBType::Point(dim) => Self::Point(Point::new(buf, byte_order, 0, dim)),
-            WKBType::LineString(dim) => Self::LineString(LineString::new(buf, byte_order, 0, dim)),
-            WKBType::Polygon(dim) => Self::Polygon(Polygon::new(buf, byte_order, 0, dim)),
-            WKBType::MultiPoint(dim) => Self::MultiPoint(MultiPoint::new(buf, byte_order, dim)),
-            WKBType::MultiLineString(dim) => {
+            WkbType::Point(dim) => Self::Point(Point::new(buf, byte_order, 0, dim)),
+            WkbType::LineString(dim) => Self::LineString(LineString::new(buf, byte_order, 0, dim)),
+            WkbType::Polygon(dim) => Self::Polygon(Polygon::new(buf, byte_order, 0, dim)),
+            WkbType::MultiPoint(dim) => Self::MultiPoint(MultiPoint::new(buf, byte_order, dim)),
+            WkbType::MultiLineString(dim) => {
                 Self::MultiLineString(MultiLineString::new(buf, byte_order, dim))
             }
-            WKBType::MultiPolygon(dim) => {
+            WkbType::MultiPolygon(dim) => {
                 Self::MultiPolygon(MultiPolygon::new(buf, byte_order, dim))
             }
-            WKBType::GeometryCollection(dim) => {
+            WkbType::GeometryCollection(dim) => {
                 Self::GeometryCollection(GeometryCollection::try_new(buf, byte_order, dim)?)
             }
         };
