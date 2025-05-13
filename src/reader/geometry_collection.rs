@@ -20,7 +20,7 @@ pub struct GeometryCollection<'a> {
 }
 
 impl<'a> GeometryCollection<'a> {
-    pub fn try_new(buf: &'a [u8], byte_order: Endianness, dim: Dimension) -> WKBResult<Self> {
+    pub fn try_new(buf: &'a [u8], byte_order: Endianness, dim: Dimension) -> WkbResult<Self> {
         let mut offset = 0;
         let has_srid = has_srid(buf, byte_order, offset);
         if has_srid {

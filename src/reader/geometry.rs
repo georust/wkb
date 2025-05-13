@@ -2,9 +2,7 @@ use std::io::Cursor;
 
 use byteorder::ReadBytesExt;
 
-use crate::common::{Dimension, WKBType};
-use crate::common::{WkbDimension, WkbType};
-use crate::error::WKBResult;
+use crate::common::{Dimension, WkbType};
 use crate::error::WkbResult;
 use crate::reader::{
     GeometryCollection, GeometryType, LineString, MultiLineString, MultiPoint, MultiPolygon, Point,

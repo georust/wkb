@@ -1,7 +1,7 @@
 use std::io::Cursor;
 
 use crate::common::Dimension;
-use crate::reader::linearring::WKBLinearRing;
+use crate::reader::linearring::LinearRing;
 use crate::reader::util::{has_srid, ReadBytesExt};
 use crate::Endianness;
 use geo_traits::Dimensions;

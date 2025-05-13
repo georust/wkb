@@ -41,7 +41,7 @@ impl Dimension {
 }
 
 impl TryFrom<geo_traits::Dimensions> for Dimension {
-    type Error = WKBError;
+    type Error = WkbError;
 
     fn try_from(value: geo_traits::Dimensions) -> Result<Self, Self::Error> {
         use geo_traits::Dimensions::*;
