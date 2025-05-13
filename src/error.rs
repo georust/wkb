@@ -1,4 +1,4 @@
-//! Defines [`WKBError`], representing all errors returned by this crate.
+//! Defines [`WkbError`], representing all errors returned by this crate.
 
 use std::borrow::Cow;
 use std::fmt::Debug;
@@ -7,7 +7,7 @@ use thiserror::Error;
 /// Enum with all errors in this crate.
 #[derive(Error, Debug)]
 #[non_exhaustive]
-pub enum WKBError {
+pub enum WkbError {
     /// Incorrect type was passed to an operation.
     #[error("Incorrect type passed to operation: {0}")]
     IncorrectType(Cow<'static, str>),
@@ -26,4 +26,4 @@ pub enum WKBError {
 }
 
 /// Crate-specific result type.
-pub type WKBResult<T> = std::result::Result<T, WKBError>;
+pub type WkbResult<T> = std::result::Result<T, WkbError>;

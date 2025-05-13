@@ -1,4 +1,4 @@
-use crate::common::WKBDimension;
+use crate::common::WkbDimension;
 use crate::reader::coord::Coord;
 use crate::reader::util::has_srid;
 use crate::Endianness;
@@ -14,7 +14,7 @@ use geo_traits::{CoordTrait, PointTrait};
 pub struct Point<'a> {
     /// The coordinate inside this Point
     coord: Coord<'a>,
-    dim: WKBDimension,
+    dim: WkbDimension,
     is_empty: bool,
     has_srid: bool,
 }
@@ -24,7 +24,7 @@ impl<'a> Point<'a> {
         buf: &'a [u8],
         byte_order: Endianness,
         offset: u64,
-        dim: WKBDimension,
+        dim: WkbDimension,
     ) -> Self {
         let has_srid = has_srid(buf, byte_order, offset);
 
@@ -67,7 +67,7 @@ impl<'a> Point<'a> {
         header + (self.dim.size() as u64 * 8)
     }
 
-    pub fn dimension(&self) -> WKBDimension {
+    pub fn dimension(&self) -> WkbDimension {
         self.dim
     }
 }

@@ -2,7 +2,7 @@ use std::io::Write;
 
 use geo_traits::{LineStringTrait, LineTrait};
 
-use crate::error::WKBResult;
+use crate::error::WkbResult;
 use crate::writer::{line_string_wkb_size, write_line_string};
 use crate::Endianness;
 
@@ -44,6 +44,6 @@ pub fn write_line(
     writer: &mut impl Write,
     geom: &impl LineTrait<T = f64>,
     endianness: Endianness,
-) -> WKBResult<()> {
+) -> WkbResult<()> {
     write_line_string(writer, &LineWrapper(geom), endianness)
 }
