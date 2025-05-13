@@ -7,8 +7,7 @@ use geo_traits::{
 };
 
 use crate::error::WkbResult;
-use crate::writer::{line_string_wkb_size, write_line_string};
-use crate::Endianness;
+use crate::writer::{line_string_wkb_size, write_line_string, WriteOptions};
 
 /// A wrapper around an impl LineTrait to provide LineStringTrait
 struct LineWrapper<'a, G: LineTrait<T = f64>>(&'a G);
@@ -42,9 +41,9 @@ pub fn line_wkb_size(geom: &impl LineTrait<T = f64>) -> usize {
 pub fn write_line(
     writer: &mut impl Write,
     geom: &impl LineTrait<T = f64>,
-    endianness: Endianness,
+    options: &WriteOptions,
 ) -> WkbResult<()> {
-    write_line_string(writer, &LineWrapper(geom), endianness)
+    write_line_string(writer, &LineWrapper(geom), options)
 }
 
 impl<'a, G: LineTrait<T = f64>> GeometryTrait for LineWrapper<'a, G> {

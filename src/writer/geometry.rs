@@ -4,9 +4,8 @@ use crate::writer::{
     multi_point_wkb_size, multi_polygon_wkb_size, point_wkb_size, polygon_wkb_size, rect_wkb_size,
     triangle_wkb_size, write_geometry_collection, write_line, write_line_string,
     write_multi_line_string, write_multi_point, write_multi_polygon, write_point, write_polygon,
-    write_rect, write_triangle,
+    write_rect, write_triangle, WriteOptions,
 };
-use crate::Endianness;
 use geo_traits::{GeometryTrait, GeometryType};
 use std::io::Write;
 
@@ -31,19 +30,19 @@ pub fn geometry_wkb_size(geom: &impl GeometryTrait<T = f64>) -> usize {
 pub fn write_geometry(
     writer: &mut impl Write,
     geom: &impl GeometryTrait<T = f64>,
-    endianness: Endianness,
+    options: &WriteOptions,
 ) -> WkbResult<()> {
     use GeometryType::*;
     match geom.as_type() {
-        Point(p) => write_point(writer, p, endianness),
-        LineString(ls) => write_line_string(writer, ls, endianness),
-        Polygon(p) => write_polygon(writer, p, endianness),
-        MultiPoint(mp) => write_multi_point(writer, mp, endianness),
-        MultiLineString(ml) => write_multi_line_string(writer, ml, endianness),
-        MultiPolygon(mp) => write_multi_polygon(writer, mp, endianness),
-        GeometryCollection(gc) => write_geometry_collection(writer, gc, endianness),
-        Rect(r) => write_rect(writer, r, endianness),
-        Triangle(tri) => write_triangle(writer, tri, endianness),
-        Line(line) => write_line(writer, line, endianness),
+        Point(p) => write_point(writer, p, options),
+        LineString(ls) => write_line_string(writer, ls, options),
+        Polygon(p) => write_polygon(writer, p, options),
+        MultiPoint(mp) => write_multi_point(writer, mp, options),
+        MultiLineString(ml) => write_multi_line_string(writer, ml, options),
+        MultiPolygon(mp) => write_multi_polygon(writer, mp, options),
+        GeometryCollection(gc) => write_geometry_collection(writer, gc, options),
+        Rect(r) => write_rect(writer, r, options),
+        Triangle(tri) => write_triangle(writer, tri, options),
+        Line(line) => write_line(writer, line, options),
     }
 }

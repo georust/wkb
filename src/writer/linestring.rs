@@ -1,6 +1,7 @@
 use crate::common::WkbType;
 use crate::error::WkbResult;
 use crate::writer::coord::write_coord;
+use crate::writer::WriteOptions;
 use crate::Endianness;
 use byteorder::{BigEndian, ByteOrder, LittleEndian, WriteBytesExt};
 use geo_traits::LineStringTrait;
@@ -18,13 +19,13 @@ pub fn line_string_wkb_size(geom: &impl LineStringTrait<T = f64>) -> usize {
 pub fn write_line_string(
     writer: &mut impl Write,
     geom: &impl LineStringTrait<T = f64>,
-    endianness: Endianness,
+    options: &WriteOptions,
 ) -> WkbResult<()> {
     // Byte order
-    writer.write_u8(endianness.into()).unwrap();
+    writer.write_u8(options.endianness.into()).unwrap();
 
     // Content
-    match endianness {
+    match options.endianness {
         Endianness::LittleEndian => write_line_string_content::<LittleEndian>(writer, geom),
         Endianness::BigEndian => write_line_string_content::<BigEndian>(writer, geom),
     }

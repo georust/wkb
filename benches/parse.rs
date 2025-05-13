@@ -15,7 +15,7 @@ fn load_big_wkt() -> Geometry {
 
 fn to_wkb(geom: &Geometry) -> Vec<u8> {
     let mut buffer = Vec::new();
-    wkb::writer::write_geometry(&mut buffer, geom, Default::default()).unwrap();
+    wkb::writer::write_geometry(&mut buffer, geom, &Default::default()).unwrap();
     buffer
 }
 
@@ -54,14 +54,14 @@ fn bench_parse(c: &mut criterion::Criterion) {
     c.bench_function("encode small", |bencher| {
         bencher.iter(|| {
             let mut buf = Vec::new();
-            wkb::writer::write_geometry(&mut buf, &small, Default::default()).unwrap();
+            wkb::writer::write_geometry(&mut buf, &small, &Default::default()).unwrap();
         });
     });
 
     c.bench_function("encode big", |bencher| {
         bencher.iter(|| {
             let mut buf = Vec::new();
-            wkb::writer::write_geometry(&mut buf, &big, Default::default()).unwrap();
+            wkb::writer::write_geometry(&mut buf, &big, &Default::default()).unwrap();
         });
     });
 }
