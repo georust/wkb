@@ -1,6 +1,6 @@
 use byteorder::{BigEndian, LittleEndian};
 
-use crate::common::WKBGeometryCode;
+use crate::common::WkbGeometryCode;
 use crate::Endianness;
 use std::io::{Cursor, Error};
 
@@ -32,6 +32,6 @@ pub(crate) fn has_srid(buf: &[u8], byte_order: Endianness, offset: u64) -> bool 
     // Skip 1-byte byte order that we already know
     reader.set_position(1 + offset);
 
-    let geometry_code = WKBGeometryCode::new(reader.read_u32(byte_order).unwrap());
+    let geometry_code = WkbGeometryCode::new(reader.read_u32(byte_order).unwrap());
     geometry_code.has_srid()
 }

@@ -3,6 +3,12 @@
 ## Unreleased
 
 - Your change here.
+
+## 0.9.0 - unreleased
+
+- **BREAKING**: Standardize capitalization of `Wkb` in the codebase.
+  - `WKBResult` is now `WkbResult`.
+  - `WKBError` is now `WkbError`.
 - Expose `GeometryType` and `Dimension` from parsed `Wkb` object (#65).
 - Expose `wkb::reader::Wkb` type through public API.
 - Make lifetime annotations of `Wkb` more permissive. (#59)

@@ -3,7 +3,7 @@ use std::io::Cursor;
 use byteorder::{BigEndian, LittleEndian, ReadBytesExt};
 use num_enum::{IntoPrimitive, TryFromPrimitive};
 
-use crate::error::{WKBError, WKBResult};
+use crate::error::{WkbError, WkbResult};
 
 /// Bit flag for EWKB Geometry with a z coordinate
 const EWKB_FLAG_Z: u32 = 0x80000000;
@@ -52,7 +52,7 @@ impl TryFrom<geo_traits::Dimensions> for Dimension {
             Xym => Self::Xym,
             Xyzm | Unknown(4) => Self::Xyzm,
             Unknown(n_dim) => {
-                return Err(WKBError::General(format!(
+                return Err(WkbError::General(format!(
                     "Unsupported number of dimensions: {}",
                     n_dim
                 )))
@@ -81,9 +81,9 @@ impl From<Dimension> for geo_traits::Dimensions {
 /// In extended WKB this additionally informs whether there's a u32 SRID immediately after this,
 /// which we need to know to skip.
 #[repr(transparent)]
-pub(crate) struct WKBGeometryCode(u32);
+pub(crate) struct WkbGeometryCode(u32);
 
-impl WKBGeometryCode {
+impl WkbGeometryCode {
     pub(crate) fn new(code: u32) -> Self {
         Self(code)
     }
@@ -92,7 +92,7 @@ impl WKBGeometryCode {
         self.0 & EWKB_FLAG_SRID == EWKB_FLAG_SRID
     }
 
-    pub(crate) fn get_type(&self) -> WKBResult<WKBType> {
+    pub(crate) fn get_type(&self) -> WkbResult<WkbType> {
         let code = self.0;
         let mut dim = Dimension::Xy;
 
@@ -120,15 +120,15 @@ impl WKBGeometryCode {
         }
 
         let typ = match code & 0x7 {
-            1 => WKBType::Point(dim),
-            2 => WKBType::LineString(dim),
-            3 => WKBType::Polygon(dim),
-            4 => WKBType::MultiPoint(dim),
-            5 => WKBType::MultiLineString(dim),
-            6 => WKBType::MultiPolygon(dim),
-            7 => WKBType::GeometryCollection(dim),
+            1 => WkbType::Point(dim),
+            2 => WkbType::LineString(dim),
+            3 => WkbType::Polygon(dim),
+            4 => WkbType::MultiPoint(dim),
+            5 => WkbType::MultiLineString(dim),
+            6 => WkbType::MultiPolygon(dim),
+            7 => WkbType::GeometryCollection(dim),
             _ => {
-                return Err(WKBError::General(format!(
+                return Err(WkbError::General(format!(
                     "WKB type code out of range. Got: {}",
                     code
                 )))
@@ -140,7 +140,7 @@ impl WKBGeometryCode {
 
 /// The various WKB types supported by this crate
 #[derive(Clone, Copy, Debug, PartialEq)]
-pub enum WKBType {
+pub(crate) enum WkbType {
     /// A WKB Point
     Point(Dimension),
     /// A WKB LineString
@@ -157,25 +157,25 @@ pub enum WKBType {
     GeometryCollection(Dimension),
 }
 
-impl WKBType {
+impl WkbType {
     /// Construct from a byte slice representing a WKB geometry
-    pub(crate) fn from_buffer(buf: &[u8]) -> WKBResult<Self> {
+    pub(crate) fn from_buffer(buf: &[u8]) -> WkbResult<Self> {
         let mut reader = Cursor::new(buf);
         let byte_order = reader.read_u8().unwrap();
         let geometry_code = match byte_order {
             0 => reader.read_u32::<BigEndian>().unwrap(),
             1 => reader.read_u32::<LittleEndian>().unwrap(),
             other => {
-                return Err(WKBError::General(format!(
+                return Err(WkbError::General(format!(
                     "Unexpected byte order: {}",
                     other
                 )))
             }
         };
-        WKBGeometryCode(geometry_code).get_type()
+        WkbGeometryCode(geometry_code).get_type()
     }
 
-    pub(crate) fn as_geometry_code(&self) -> WKBGeometryCode {
+    pub(crate) fn as_geometry_code(&self) -> WkbGeometryCode {
         let code = match self {
             Self::Point(dim) => 1 + dim.as_u32_offset(),
             Self::LineString(dim) => 2 + dim.as_u32_offset(),
@@ -185,12 +185,12 @@ impl WKBType {
             Self::MultiPolygon(dim) => 6 + dim.as_u32_offset(),
             Self::GeometryCollection(dim) => 7 + dim.as_u32_offset(),
         };
-        WKBGeometryCode(code)
+        WkbGeometryCode(code)
     }
 }
 
-impl From<WKBType> for u32 {
-    fn from(value: WKBType) -> Self {
+impl From<WkbType> for u32 {
+    fn from(value: WkbType) -> Self {
         value.as_geometry_code().0
     }
 }

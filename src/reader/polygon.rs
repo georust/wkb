@@ -15,7 +15,7 @@ const HEADER_BYTES: u64 = 5;
 /// This has been preprocessed, so access to any internal coordinate is `O(1)`.
 #[derive(Debug, Clone)]
 pub struct Polygon<'a> {
-    wkb_linear_rings: Vec<WKBLinearRing<'a>>,
+    wkb_linear_rings: Vec<LinearRing<'a>>,
     dim: Dimension,
     has_srid: bool,
 }
@@ -39,7 +39,7 @@ impl<'a> Polygon<'a> {
         let mut ring_offset = offset + 1 + 4 + 4;
         let mut wkb_linear_rings = Vec::with_capacity(num_rings);
         for _ in 0..num_rings {
-            let polygon = WKBLinearRing::new(buf, byte_order, ring_offset, dim);
+            let polygon = LinearRing::new(buf, byte_order, ring_offset, dim);
             wkb_linear_rings.push(polygon);
             ring_offset += polygon.size();
         }
@@ -77,7 +77,7 @@ impl<'a> Polygon<'a> {
 impl<'a> PolygonTrait for Polygon<'a> {
     type T = f64;
     type RingType<'b>
-        = &'b WKBLinearRing<'a>
+        = &'b LinearRing<'a>
     where
         Self: 'b;
 
@@ -110,7 +110,7 @@ impl<'a> PolygonTrait for Polygon<'a> {
 impl<'a, 'b> PolygonTrait for &'b Polygon<'a> {
     type T = f64;
     type RingType<'c>
-        = &'b WKBLinearRing<'a>
+        = &'b LinearRing<'a>
     where
         Self: 'c;
 

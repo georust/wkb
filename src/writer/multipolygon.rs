@@ -1,5 +1,5 @@
-use crate::common::WKBType;
-use crate::error::WKBResult;
+use crate::common::WkbType;
+use crate::error::WkbResult;
 use crate::writer::polygon::{polygon_wkb_size, write_polygon};
 use crate::Endianness;
 use byteorder::{BigEndian, ByteOrder, LittleEndian, WriteBytesExt};
@@ -21,7 +21,7 @@ pub fn write_multi_polygon(
     writer: &mut impl Write,
     geom: &impl MultiPolygonTrait<T = f64>,
     endianness: Endianness,
-) -> WKBResult<()> {
+) -> WkbResult<()> {
     // Byte order
     writer.write_u8(endianness.into())?;
 
@@ -38,8 +38,8 @@ fn write_multi_polygon_content<B: ByteOrder>(
     writer: &mut impl Write,
     geom: &impl MultiPolygonTrait<T = f64>,
     endianness: Endianness,
-) -> WKBResult<()> {
-    let wkb_type = WKBType::MultiPolygon(geom.dim().try_into()?);
+) -> WkbResult<()> {
+    let wkb_type = WkbType::MultiPolygon(geom.dim().try_into()?);
     writer.write_u32::<B>(wkb_type.into())?;
 
     // numPolygons

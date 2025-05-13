@@ -1,7 +1,7 @@
 use std::io::Cursor;
 
 use crate::common::Dimension;
-use crate::error::WKBResult;
+use crate::error::WkbResult;
 use crate::reader::util::{has_srid, ReadBytesExt};
 use crate::reader::Wkb;
 use crate::Endianness;

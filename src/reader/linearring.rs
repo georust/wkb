@@ -13,7 +13,7 @@ use geo_traits::LineStringTrait;
 ///
 /// See page 65 of <https://portal.ogc.org/files/?artifact_id=25355>.
 #[derive(Debug, Clone, Copy)]
-pub struct WKBLinearRing<'a> {
+pub struct LinearRing<'a> {
     /// The underlying WKB buffer
     buf: &'a [u8],
 
@@ -34,7 +34,7 @@ pub struct WKBLinearRing<'a> {
     dim: Dimension,
 }
 
-impl<'a> WKBLinearRing<'a> {
+impl<'a> LinearRing<'a> {
     pub fn new(buf: &'a [u8], byte_order: Endianness, offset: u64, dim: Dimension) -> Self {
         let mut reader = Cursor::new(buf);
         reader.set_position(offset);
@@ -65,7 +65,7 @@ impl<'a> WKBLinearRing<'a> {
     }
 }
 
-impl<'a> LineStringTrait for WKBLinearRing<'a> {
+impl<'a> LineStringTrait for LinearRing<'a> {
     type T = f64;
     type CoordType<'b>
         = Coord<'a>
@@ -92,7 +92,7 @@ impl<'a> LineStringTrait for WKBLinearRing<'a> {
     }
 }
 
-impl<'a> LineStringTrait for &WKBLinearRing<'a> {
+impl<'a> LineStringTrait for &LinearRing<'a> {
     type T = f64;
     type CoordType<'c>
         = Coord<'a>

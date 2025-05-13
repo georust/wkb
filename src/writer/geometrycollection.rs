@@ -1,5 +1,5 @@
-use crate::common::WKBType;
-use crate::error::WKBResult;
+use crate::common::WkbType;
+use crate::error::WkbResult;
 use crate::writer::geometry::{geometry_wkb_size, write_geometry};
 use crate::Endianness;
 use byteorder::{BigEndian, ByteOrder, LittleEndian, WriteBytesExt};
@@ -22,7 +22,7 @@ pub fn write_geometry_collection(
     writer: &mut impl Write,
     geom: &impl GeometryCollectionTrait<T = f64>,
     endianness: Endianness,
-) -> WKBResult<()> {
+) -> WkbResult<()> {
     // Byte order
     writer.write_u8(endianness.into())?;
 
@@ -41,8 +41,8 @@ fn write_geometry_collection_content<B: ByteOrder>(
     writer: &mut impl Write,
     geom: &impl GeometryCollectionTrait<T = f64>,
     endianness: Endianness,
-) -> WKBResult<()> {
-    let wkb_type = WKBType::GeometryCollection(geom.dim().try_into()?);
+) -> WkbResult<()> {
+    let wkb_type = WkbType::GeometryCollection(geom.dim().try_into()?);
     writer.write_u32::<B>(wkb_type.into())?;
 
     // numGeometries

@@ -7,4 +7,4 @@ pub mod reader;
 mod test;
 pub mod writer;
 
-pub use common::{Endianness, WKBType};
+pub use common::Endianness;
