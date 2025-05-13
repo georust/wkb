@@ -68,7 +68,7 @@ pub fn write_triangle(
     write_polygon(writer, &TriangleWrapper(geom), options)
 }
 
-impl<'a, G: TriangleTrait<T = f64>> GeometryTrait for TriangleWrapper<'a, G> {
+impl<G: TriangleTrait<T = f64>> GeometryTrait for TriangleWrapper<'_, G> {
     type T = f64;
     type PointType<'b>
         = UnimplementedPoint<f64>
@@ -119,13 +119,13 @@ impl<'a, G: TriangleTrait<T = f64>> GeometryTrait for TriangleWrapper<'a, G> {
         &self,
     ) -> geo_traits::GeometryType<
         '_,
-        Self::PointType<'a>,
-        Self::LineStringType<'a>,
-        Self::PolygonType<'a>,
-        Self::MultiPointType<'a>,
-        Self::MultiLineStringType<'a>,
-        Self::MultiPolygonType<'a>,
-        Self::GeometryCollectionType<'a>,
+        Self::PointType<'_>,
+        Self::LineStringType<'_>,
+        Self::PolygonType<'_>,
+        Self::MultiPointType<'_>,
+        Self::MultiLineStringType<'_>,
+        Self::MultiPolygonType<'_>,
+        Self::GeometryCollectionType<'_>,
         Self::RectType<'_>,
         Self::TriangleType<'_>,
         Self::LineType<'_>,
@@ -185,13 +185,13 @@ impl<'a, G: TriangleTrait<T = f64>> GeometryTrait for &'a TriangleWrapper<'a, G>
         &self,
     ) -> geo_traits::GeometryType<
         '_,
-        Self::PointType<'a>,
-        Self::LineStringType<'a>,
-        Self::PolygonType<'a>,
-        Self::MultiPointType<'a>,
-        Self::MultiLineStringType<'a>,
-        Self::MultiPolygonType<'a>,
-        Self::GeometryCollectionType<'a>,
+        Self::PointType<'_>,
+        Self::LineStringType<'_>,
+        Self::PolygonType<'_>,
+        Self::MultiPointType<'_>,
+        Self::MultiLineStringType<'_>,
+        Self::MultiPolygonType<'_>,
+        Self::GeometryCollectionType<'_>,
         Self::RectType<'_>,
         Self::TriangleType<'_>,
         Self::LineType<'_>,

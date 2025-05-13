@@ -46,7 +46,7 @@ pub fn write_line(
     write_line_string(writer, &LineWrapper(geom), options)
 }
 
-impl<'a, G: LineTrait<T = f64>> GeometryTrait for LineWrapper<'a, G> {
+impl<G: LineTrait<T = f64>> GeometryTrait for LineWrapper<'_, G> {
     type T = f64;
     type PointType<'b>
         = UnimplementedPoint<f64>
@@ -97,13 +97,13 @@ impl<'a, G: LineTrait<T = f64>> GeometryTrait for LineWrapper<'a, G> {
         &self,
     ) -> geo_traits::GeometryType<
         '_,
-        Self::PointType<'a>,
-        Self::LineStringType<'a>,
-        Self::PolygonType<'a>,
-        Self::MultiPointType<'a>,
-        Self::MultiLineStringType<'a>,
-        Self::MultiPolygonType<'a>,
-        Self::GeometryCollectionType<'a>,
+        Self::PointType<'_>,
+        Self::LineStringType<'_>,
+        Self::PolygonType<'_>,
+        Self::MultiPointType<'_>,
+        Self::MultiLineStringType<'_>,
+        Self::MultiPolygonType<'_>,
+        Self::GeometryCollectionType<'_>,
         Self::RectType<'_>,
         Self::TriangleType<'_>,
         Self::LineType<'_>,
