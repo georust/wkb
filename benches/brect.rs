@@ -1,16 +1,14 @@
-use std::str::FromStr;
-
 use criterion::{criterion_group, criterion_main};
 use geo_traits::{CoordTrait, GeometryTrait, GeometryType, LineStringTrait, PolygonTrait};
-use geo_types::coord;
-use wkt::Wkt;
+use geo_types::{coord, Geometry};
+use wkt::TryFromWkt;
 
-fn load_small_wkt() -> Wkt<f64> {
+fn load_small_wkt() -> Geometry {
     let s = include_str!("./small.wkt");
-    Wkt::from_str(s).unwrap()
+    Geometry::try_from_wkt_str(s).unwrap()
 }
 
-fn to_wkb(geom: &Wkt<f64>) -> Vec<u8> {
+fn to_wkb(geom: &Geometry) -> Vec<u8> {
     let mut buffer = Vec::new();
     wkb::writer::write_geometry(&mut buffer, geom, &Default::default()).unwrap();
     buffer
