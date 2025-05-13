@@ -3,7 +3,7 @@ use std::io::Cursor;
 use byteorder::{BigEndian, LittleEndian, ReadBytesExt};
 use num_enum::{IntoPrimitive, TryFromPrimitive};
 
-use crate::error::{WKBError, WKBResult};
+use crate::error::{WkbError, WkbResult};
 
 /// Bit flag for EWKB Geometry with a z coordinate
 const EWKB_FLAG_Z: u32 = 0x80000000;
@@ -14,14 +14,14 @@ const EWKB_FLAG_SRID: u32 = 0x20000000;
 
 /// Supported WKB dimensions
 #[derive(Clone, Copy, Debug, PartialEq)]
-pub enum WKBDimension {
+pub enum WkbDimension {
     Xy,
     Xyz,
     Xym,
     Xyzm,
 }
 
-impl WKBDimension {
+impl WkbDimension {
     fn as_u32_offset(&self) -> u32 {
         match self {
             Self::Xy => 0,
@@ -40,8 +40,8 @@ impl WKBDimension {
     }
 }
 
-impl TryFrom<geo_traits::Dimensions> for WKBDimension {
-    type Error = WKBError;
+impl TryFrom<geo_traits::Dimensions> for WkbDimension {
+    type Error = WkbError;
 
     fn try_from(value: geo_traits::Dimensions) -> Result<Self, Self::Error> {
         use geo_traits::Dimensions::*;
@@ -52,7 +52,7 @@ impl TryFrom<geo_traits::Dimensions> for WKBDimension {
             Xym => Self::Xym,
             Xyzm | Unknown(4) => Self::Xyzm,
             Unknown(n_dim) => {
-                return Err(WKBError::General(format!(
+                return Err(WkbError::General(format!(
                     "Unsupported number of dimensions: {}",
                     n_dim
                 )))
@@ -62,13 +62,13 @@ impl TryFrom<geo_traits::Dimensions> for WKBDimension {
     }
 }
 
-impl From<WKBDimension> for geo_traits::Dimensions {
-    fn from(value: WKBDimension) -> Self {
+impl From<WkbDimension> for geo_traits::Dimensions {
+    fn from(value: WkbDimension) -> Self {
         match value {
-            WKBDimension::Xy => Self::Xy,
-            WKBDimension::Xyz => Self::Xyz,
-            WKBDimension::Xym => Self::Xym,
-            WKBDimension::Xyzm => Self::Xyzm,
+            WkbDimension::Xy => Self::Xy,
+            WkbDimension::Xyz => Self::Xyz,
+            WkbDimension::Xym => Self::Xym,
+            WkbDimension::Xyzm => Self::Xyzm,
         }
     }
 }
@@ -81,9 +81,9 @@ impl From<WKBDimension> for geo_traits::Dimensions {
 /// In extended WKB this additionally informs whether there's a u32 SRID immediately after this,
 /// which we need to know to skip.
 #[repr(transparent)]
-pub(crate) struct WKBGeometryCode(u32);
+pub(crate) struct WkbGeometryCode(u32);
 
-impl WKBGeometryCode {
+impl WkbGeometryCode {
     pub(crate) fn new(code: u32) -> Self {
         Self(code)
     }
@@ -92,9 +92,9 @@ impl WKBGeometryCode {
         self.0 & EWKB_FLAG_SRID == EWKB_FLAG_SRID
     }
 
-    pub(crate) fn get_type(&self) -> WKBResult<WKBType> {
+    pub(crate) fn get_type(&self) -> WkbResult<WkbType> {
         let code = self.0;
-        let mut dim = WKBDimension::Xy;
+        let mut dim = WkbDimension::Xy;
 
         // For ISO WKB:
         // Values 1, 2, 3 are 2D,
@@ -102,9 +102,9 @@ impl WKBGeometryCode {
         // 2001 etc are XYM,
         // 3001 etc are XYZM
         match code / 1000 {
-            1 => dim = WKBDimension::Xyz,
-            2 => dim = WKBDimension::Xym,
-            3 => dim = WKBDimension::Xyzm,
+            1 => dim = WkbDimension::Xyz,
+            2 => dim = WkbDimension::Xym,
+            3 => dim = WkbDimension::Xyzm,
             _ => (),
         };
 
@@ -113,22 +113,22 @@ impl WKBGeometryCode {
         let is_ewkb_m = code & EWKB_FLAG_M == EWKB_FLAG_M;
 
         match (is_ewkb_z, is_ewkb_m) {
-            (true, true) => dim = WKBDimension::Xyzm,
-            (true, false) => dim = WKBDimension::Xyz,
-            (false, true) => dim = WKBDimension::Xym,
+            (true, true) => dim = WkbDimension::Xyzm,
+            (true, false) => dim = WkbDimension::Xyz,
+            (false, true) => dim = WkbDimension::Xym,
             _ => (),
         }
 
         let typ = match code & 0x7 {
-            1 => WKBType::Point(dim),
-            2 => WKBType::LineString(dim),
-            3 => WKBType::Polygon(dim),
-            4 => WKBType::MultiPoint(dim),
-            5 => WKBType::MultiLineString(dim),
-            6 => WKBType::MultiPolygon(dim),
-            7 => WKBType::GeometryCollection(dim),
+            1 => WkbType::Point(dim),
+            2 => WkbType::LineString(dim),
+            3 => WkbType::Polygon(dim),
+            4 => WkbType::MultiPoint(dim),
+            5 => WkbType::MultiLineString(dim),
+            6 => WkbType::MultiPolygon(dim),
+            7 => WkbType::GeometryCollection(dim),
             _ => {
-                return Err(WKBError::General(format!(
+                return Err(WkbError::General(format!(
                     "WKB type code out of range. Got: {}",
                     code
                 )))
@@ -140,42 +140,42 @@ impl WKBGeometryCode {
 
 /// The various WKB types supported by this crate
 #[derive(Clone, Copy, Debug, PartialEq)]
-pub enum WKBType {
+pub(crate) enum WkbType {
     /// A WKB Point
-    Point(WKBDimension),
+    Point(WkbDimension),
     /// A WKB LineString
-    LineString(WKBDimension),
+    LineString(WkbDimension),
     /// A WKB Polygon
-    Polygon(WKBDimension),
+    Polygon(WkbDimension),
     /// A WKB MultiPoint
-    MultiPoint(WKBDimension),
+    MultiPoint(WkbDimension),
     /// A WKB MultiLineString
-    MultiLineString(WKBDimension),
+    MultiLineString(WkbDimension),
     /// A WKB MultiPolygon
-    MultiPolygon(WKBDimension),
+    MultiPolygon(WkbDimension),
     /// A WKB GeometryCollection
-    GeometryCollection(WKBDimension),
+    GeometryCollection(WkbDimension),
 }
 
-impl WKBType {
+impl WkbType {
     /// Construct from a byte slice representing a WKB geometry
-    pub(crate) fn from_buffer(buf: &[u8]) -> WKBResult<Self> {
+    pub(crate) fn from_buffer(buf: &[u8]) -> WkbResult<Self> {
         let mut reader = Cursor::new(buf);
         let byte_order = reader.read_u8().unwrap();
         let geometry_code = match byte_order {
             0 => reader.read_u32::<BigEndian>().unwrap(),
             1 => reader.read_u32::<LittleEndian>().unwrap(),
             other => {
-                return Err(WKBError::General(format!(
+                return Err(WkbError::General(format!(
                     "Unexpected byte order: {}",
                     other
                 )))
             }
         };
-        WKBGeometryCode(geometry_code).get_type()
+        WkbGeometryCode(geometry_code).get_type()
     }
 
-    pub(crate) fn as_geometry_code(&self) -> WKBGeometryCode {
+    pub(crate) fn as_geometry_code(&self) -> WkbGeometryCode {
         let code = match self {
             Self::Point(dim) => 1 + dim.as_u32_offset(),
             Self::LineString(dim) => 2 + dim.as_u32_offset(),
@@ -185,12 +185,12 @@ impl WKBType {
             Self::MultiPolygon(dim) => 6 + dim.as_u32_offset(),
             Self::GeometryCollection(dim) => 7 + dim.as_u32_offset(),
         };
-        WKBGeometryCode(code)
+        WkbGeometryCode(code)
     }
 }
 
-impl From<WKBType> for u32 {
-    fn from(value: WKBType) -> Self {
+impl From<WkbType> for u32 {
+    fn from(value: WkbType) -> Self {
         value.as_geometry_code().0
     }
 }

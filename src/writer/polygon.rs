@@ -1,5 +1,5 @@
-use crate::common::WKBType;
-use crate::error::WKBResult;
+use crate::common::WkbType;
+use crate::error::WkbResult;
 use crate::writer::coord::write_coord;
 use crate::Endianness;
 use byteorder::{BigEndian, ByteOrder, LittleEndian, WriteBytesExt};
@@ -28,7 +28,7 @@ pub fn write_polygon(
     writer: &mut impl Write,
     geom: &impl PolygonTrait<T = f64>,
     endianness: Endianness,
-) -> WKBResult<()> {
+) -> WkbResult<()> {
     // Byte order
     writer.write_u8(endianness.into())?;
 
@@ -42,8 +42,8 @@ pub fn write_polygon(
 fn write_polygon_content<B: ByteOrder>(
     writer: &mut impl Write,
     geom: &impl PolygonTrait<T = f64>,
-) -> WKBResult<()> {
-    let wkb_type = WKBType::Polygon(geom.dim().try_into()?);
+) -> WkbResult<()> {
+    let wkb_type = WkbType::Polygon(geom.dim().try_into()?);
     writer.write_u32::<B>(wkb_type.into())?;
 
     // numRings

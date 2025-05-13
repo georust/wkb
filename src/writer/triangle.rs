@@ -2,7 +2,7 @@ use std::io::Write;
 
 use geo_traits::{LineStringTrait, PolygonTrait, TriangleTrait};
 
-use crate::error::WKBResult;
+use crate::error::WkbResult;
 use crate::writer::{polygon_wkb_size, write_polygon};
 use crate::Endianness;
 
@@ -70,6 +70,6 @@ pub fn write_triangle(
     writer: &mut impl Write,
     geom: &impl TriangleTrait<T = f64>,
     endianness: Endianness,
-) -> WKBResult<()> {
+) -> WkbResult<()> {
     write_polygon(writer, &TriangleWrapper(geom), endianness)
 }
