@@ -47,7 +47,7 @@ impl<'a, G: RectTrait<T = f64>> LineStringTrait for &'a RectWrapper<'a, G> {
         Self: 'b;
 
     fn dim(&self) -> geo_traits::Dimensions {
-        self.0.dim()
+        geo_traits::Dimensions::Xy
     }
 
     fn num_coords(&self) -> usize {
@@ -93,7 +93,7 @@ impl<G: RectTrait<T = f64>> PolygonTrait for RectWrapper<'_, G> {
         Self: 'b;
 
     fn dim(&self) -> geo_traits::Dimensions {
-        self.0.dim()
+        geo_traits::Dimensions::Xy
     }
 
     fn exterior(&self) -> Option<Self::RingType<'_>> {
