@@ -1,11 +1,14 @@
 use std::io::Cursor;
 
+use geo_traits::{GeometryTrait, LineStringTrait};
+
 use crate::common::Dimension;
 use crate::reader::coord::Coord;
 use crate::reader::util::ReadBytesExt;
+use crate::reader::{
+    GeometryCollection, MultiLineString, MultiPoint, MultiPolygon, Point, Polygon,
+};
 use crate::Endianness;
-use geo_traits::Dimensions;
-use geo_traits::LineStringTrait;
 
 /// A linear ring in a WKB buffer.
 ///
@@ -63,18 +66,17 @@ impl<'a> LinearRing<'a> {
     pub fn coord_offset(&self, i: u64) -> u64 {
         self.offset + 4 + (self.dim.size() as u64 * 8 * i)
     }
+
+    pub(crate) fn dimension(&self) -> Dimension {
+        self.dim
+    }
 }
 
 impl<'a> LineStringTrait for LinearRing<'a> {
-    type T = f64;
     type CoordType<'b>
         = Coord<'a>
     where
         Self: 'b;
-
-    fn dim(&self) -> Dimensions {
-        self.dim.into()
-    }
 
     #[inline]
     fn num_coords(&self) -> usize {
@@ -93,15 +95,10 @@ impl<'a> LineStringTrait for LinearRing<'a> {
 }
 
 impl<'a> LineStringTrait for &LinearRing<'a> {
-    type T = f64;
-    type CoordType<'c>
+    type CoordType<'b>
         = Coord<'a>
     where
-        Self: 'c;
-
-    fn dim(&self) -> Dimensions {
-        self.dim.into()
-    }
+        Self: 'b;
 
     #[inline]
     fn num_coords(&self) -> usize {
@@ -116,5 +113,137 @@ impl<'a> LineStringTrait for &LinearRing<'a> {
             self.coord_offset(i.try_into().unwrap()),
             self.dim,
         )
+    }
+}
+
+impl<'a> GeometryTrait for LinearRing<'a> {
+    type T = f64;
+    type PointType<'b>
+        = Point<'a>
+    where
+        Self: 'b;
+    type LineStringType<'b>
+        = LinearRing<'a>
+    where
+        Self: 'b;
+    type PolygonType<'b>
+        = Polygon<'a>
+    where
+        Self: 'b;
+    type MultiPointType<'b>
+        = MultiPoint<'a>
+    where
+        Self: 'b;
+    type MultiLineStringType<'b>
+        = MultiLineString<'a>
+    where
+        Self: 'b;
+    type MultiPolygonType<'b>
+        = MultiPolygon<'a>
+    where
+        Self: 'b;
+    type GeometryCollectionType<'b>
+        = GeometryCollection<'a>
+    where
+        Self: 'b;
+    type RectType<'b>
+        = geo_traits::UnimplementedRect<f64>
+    where
+        Self: 'b;
+    type LineType<'b>
+        = geo_traits::UnimplementedLine<f64>
+    where
+        Self: 'b;
+    type TriangleType<'b>
+        = geo_traits::UnimplementedTriangle<f64>
+    where
+        Self: 'b;
+
+    fn dim(&self) -> geo_traits::Dimensions {
+        self.dimension().into()
+    }
+
+    fn as_type(
+        &self,
+    ) -> geo_traits::GeometryType<
+        '_,
+        Self::PointType<'a>,
+        Self::LineStringType<'a>,
+        Self::PolygonType<'a>,
+        Self::MultiPointType<'a>,
+        Self::MultiLineStringType<'a>,
+        Self::MultiPolygonType<'a>,
+        Self::GeometryCollectionType<'a>,
+        Self::RectType<'_>,
+        Self::TriangleType<'_>,
+        Self::LineType<'_>,
+    > {
+        geo_traits::GeometryType::LineString(self)
+    }
+}
+
+impl<'a> GeometryTrait for &LinearRing<'a> {
+    type T = f64;
+    type PointType<'b>
+        = Point<'a>
+    where
+        Self: 'b;
+    type LineStringType<'b>
+        = LinearRing<'a>
+    where
+        Self: 'b;
+    type PolygonType<'b>
+        = Polygon<'a>
+    where
+        Self: 'b;
+    type MultiPointType<'b>
+        = MultiPoint<'a>
+    where
+        Self: 'b;
+    type MultiLineStringType<'b>
+        = MultiLineString<'a>
+    where
+        Self: 'b;
+    type MultiPolygonType<'b>
+        = MultiPolygon<'a>
+    where
+        Self: 'b;
+    type GeometryCollectionType<'b>
+        = GeometryCollection<'a>
+    where
+        Self: 'b;
+    type RectType<'b>
+        = geo_traits::UnimplementedRect<f64>
+    where
+        Self: 'b;
+    type LineType<'b>
+        = geo_traits::UnimplementedLine<f64>
+    where
+        Self: 'b;
+    type TriangleType<'b>
+        = geo_traits::UnimplementedTriangle<f64>
+    where
+        Self: 'b;
+
+    fn dim(&self) -> geo_traits::Dimensions {
+        self.dimension().into()
+    }
+
+    fn as_type(
+        &self,
+    ) -> geo_traits::GeometryType<
+        '_,
+        Self::PointType<'_>,
+        Self::LineStringType<'_>,
+        Self::PolygonType<'_>,
+        Self::MultiPointType<'_>,
+        Self::MultiLineStringType<'_>,
+        Self::MultiPolygonType<'_>,
+        Self::GeometryCollectionType<'_>,
+        Self::RectType<'_>,
+        Self::TriangleType<'_>,
+        Self::LineType<'_>,
+    > {
+        geo_traits::GeometryType::LineString(self)
     }
 }

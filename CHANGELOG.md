@@ -9,6 +9,7 @@
 - **BREAKING**: Standardize capitalization of `Wkb` in the codebase.
   - `WKBResult` is now `WkbResult`.
   - `WKBError` is now `WkbError`.
+- **BREAKING**: Bump to geo-traits 0.3.
 - Expose `GeometryType` and `Dimension` from parsed `Wkb` object (#65).
 - Expose `wkb::reader::Wkb` type through public API.
 - Ensure correct dimension when writing `Rect` to WKB. (#67)

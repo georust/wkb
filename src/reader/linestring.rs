@@ -4,7 +4,6 @@ use crate::common::Dimension;
 use crate::reader::coord::Coord;
 use crate::reader::util::{has_srid, ReadBytesExt};
 use crate::Endianness;
-use geo_traits::Dimensions;
 use geo_traits::LineStringTrait;
 
 const HEADER_BYTES: u64 = 5;
@@ -74,15 +73,10 @@ impl<'a> LineString<'a> {
 }
 
 impl<'a> LineStringTrait for LineString<'a> {
-    type T = f64;
     type CoordType<'b>
         = Coord<'a>
     where
         Self: 'b;
-
-    fn dim(&self) -> Dimensions {
-        self.dim.into()
-    }
 
     fn num_coords(&self) -> usize {
         self.num_points
@@ -99,15 +93,10 @@ impl<'a> LineStringTrait for LineString<'a> {
 }
 
 impl<'a> LineStringTrait for &LineString<'a> {
-    type T = f64;
     type CoordType<'b>
         = Coord<'a>
     where
         Self: 'b;
-
-    fn dim(&self) -> Dimensions {
-        self.dim.into()
-    }
 
     fn num_coords(&self) -> usize {
         self.num_points

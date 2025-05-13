@@ -13,7 +13,7 @@ rust-version = "1.82"
 
 [dependencies]
 byteorder = "1"
-geo-traits = "0.2"
+geo-traits = "0.3"
 num_enum = "0.7"
 thiserror = "1"
 

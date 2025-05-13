@@ -2,7 +2,6 @@ use crate::common::Dimension;
 use crate::reader::coord::Coord;
 use crate::reader::util::has_srid;
 use crate::Endianness;
-use geo_traits::Dimensions;
 use geo_traits::{CoordTrait, PointTrait};
 
 /// A WKB Point.
@@ -68,15 +67,10 @@ impl<'a> Point<'a> {
 }
 
 impl<'a> PointTrait for Point<'a> {
-    type T = f64;
     type CoordType<'b>
         = Coord<'a>
     where
         Self: 'b;
-
-    fn dim(&self) -> Dimensions {
-        self.dim.into()
-    }
 
     fn coord(&self) -> Option<Self::CoordType<'_>> {
         if self.is_empty {
@@ -88,15 +82,10 @@ impl<'a> PointTrait for Point<'a> {
 }
 
 impl<'a> PointTrait for &Point<'a> {
-    type T = f64;
     type CoordType<'b>
         = Coord<'a>
     where
         Self: 'b;
-
-    fn dim(&self) -> Dimensions {
-        self.dim.into()
-    }
 
     fn coord(&self) -> Option<Self::CoordType<'_>> {
         if self.is_empty {
