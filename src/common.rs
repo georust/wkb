@@ -140,7 +140,7 @@ impl WkbGeometryCode {
 
 /// The various WKB types supported by this crate
 #[derive(Clone, Copy, Debug, PartialEq)]
-pub enum WkbType {
+pub(crate) enum WkbType {
     /// A WKB Point
     Point(WkbDimension),
     /// A WKB LineString
