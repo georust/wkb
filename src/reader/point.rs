@@ -1,4 +1,4 @@
-use crate::common::WkbDimension;
+use crate::common::Dimension;
 use crate::reader::coord::Coord;
 use crate::reader::util::has_srid;
 use crate::Endianness;
@@ -14,18 +14,13 @@ use geo_traits::{CoordTrait, PointTrait};
 pub struct Point<'a> {
     /// The coordinate inside this Point
     coord: Coord<'a>,
-    dim: WkbDimension,
+    dim: Dimension,
     is_empty: bool,
     has_srid: bool,
 }
 
 impl<'a> Point<'a> {
-    pub(crate) fn new(
-        buf: &'a [u8],
-        byte_order: Endianness,
-        offset: u64,
-        dim: WkbDimension,
-    ) -> Self {
+    pub(crate) fn new(buf: &'a [u8], byte_order: Endianness, offset: u64, dim: Dimension) -> Self {
         let has_srid = has_srid(buf, byte_order, offset);
 
         // The space of the byte order + geometry type
@@ -67,7 +62,7 @@ impl<'a> Point<'a> {
         header + (self.dim.size() as u64 * 8)
     }
 
-    pub fn dimension(&self) -> WkbDimension {
+    pub fn dimension(&self) -> Dimension {
         self.dim
     }
 }

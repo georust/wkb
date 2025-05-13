@@ -32,3 +32,19 @@ use crate::error::WkbResult;
 pub fn read_wkb(buf: &[u8]) -> WkbResult<Wkb> {
     Wkb::try_new(buf)
 }
+
+/// The geometry type of the WKB object.
+///
+/// This is marked as non exhaustive because we do not currently support extended WKB types, such
+/// as curves.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
+#[non_exhaustive]
+pub enum GeometryType {
+    Point,
+    LineString,
+    Polygon,
+    MultiPoint,
+    MultiLineString,
+    MultiPolygon,
+    GeometryCollection,
+}

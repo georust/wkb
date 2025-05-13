@@ -2,10 +2,11 @@ use std::io::Cursor;
 
 use byteorder::ReadBytesExt;
 
-use crate::common::{WkbDimension, WkbType};
+use crate::common::{Dimension, WkbType};
 use crate::error::WkbResult;
 use crate::reader::{
-    GeometryCollection, LineString, MultiLineString, MultiPoint, MultiPolygon, Point, Polygon,
+    GeometryCollection, GeometryType, LineString, MultiLineString, MultiPoint, MultiPolygon, Point,
+    Polygon,
 };
 use crate::Endianness;
 use geo_traits::{
@@ -40,7 +41,8 @@ impl<'a> Wkb<'a> {
         Ok(Self(inner))
     }
 
-    pub(crate) fn dimension(&self) -> WkbDimension {
+    // Return the [Dimension] of this geometry.
+    pub fn dimension(&self) -> Dimension {
         use WkbInner::*;
         match &self.0 {
             Point(g) => g.dimension(),
@@ -50,6 +52,20 @@ impl<'a> Wkb<'a> {
             MultiLineString(g) => g.dimension(),
             MultiPolygon(g) => g.dimension(),
             GeometryCollection(g) => g.dimension(),
+        }
+    }
+
+    /// Return the [GeometryType] of this geometry.
+    pub fn geometry_type(&self) -> GeometryType {
+        use WkbInner::*;
+        match &self.0 {
+            Point(_) => GeometryType::Point,
+            LineString(_) => GeometryType::LineString,
+            Polygon(_) => GeometryType::Polygon,
+            MultiPoint(_) => GeometryType::MultiPoint,
+            MultiLineString(_) => GeometryType::MultiLineString,
+            MultiPolygon(_) => GeometryType::MultiPolygon,
+            GeometryCollection(_) => GeometryType::GeometryCollection,
         }
     }
 

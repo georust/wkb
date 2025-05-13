@@ -14,14 +14,14 @@ const EWKB_FLAG_SRID: u32 = 0x20000000;
 
 /// Supported WKB dimensions
 #[derive(Clone, Copy, Debug, PartialEq)]
-pub enum WkbDimension {
+pub enum Dimension {
     Xy,
     Xyz,
     Xym,
     Xyzm,
 }
 
-impl WkbDimension {
+impl Dimension {
     fn as_u32_offset(&self) -> u32 {
         match self {
             Self::Xy => 0,
@@ -40,7 +40,7 @@ impl WkbDimension {
     }
 }
 
-impl TryFrom<geo_traits::Dimensions> for WkbDimension {
+impl TryFrom<geo_traits::Dimensions> for Dimension {
     type Error = WkbError;
 
     fn try_from(value: geo_traits::Dimensions) -> Result<Self, Self::Error> {
@@ -62,13 +62,13 @@ impl TryFrom<geo_traits::Dimensions> for WkbDimension {
     }
 }
 
-impl From<WkbDimension> for geo_traits::Dimensions {
-    fn from(value: WkbDimension) -> Self {
+impl From<Dimension> for geo_traits::Dimensions {
+    fn from(value: Dimension) -> Self {
         match value {
-            WkbDimension::Xy => Self::Xy,
-            WkbDimension::Xyz => Self::Xyz,
-            WkbDimension::Xym => Self::Xym,
-            WkbDimension::Xyzm => Self::Xyzm,
+            Dimension::Xy => Self::Xy,
+            Dimension::Xyz => Self::Xyz,
+            Dimension::Xym => Self::Xym,
+            Dimension::Xyzm => Self::Xyzm,
         }
     }
 }
@@ -94,7 +94,7 @@ impl WkbGeometryCode {
 
     pub(crate) fn get_type(&self) -> WkbResult<WkbType> {
         let code = self.0;
-        let mut dim = WkbDimension::Xy;
+        let mut dim = Dimension::Xy;
 
         // For ISO WKB:
         // Values 1, 2, 3 are 2D,
@@ -102,9 +102,9 @@ impl WkbGeometryCode {
         // 2001 etc are XYM,
         // 3001 etc are XYZM
         match code / 1000 {
-            1 => dim = WkbDimension::Xyz,
-            2 => dim = WkbDimension::Xym,
-            3 => dim = WkbDimension::Xyzm,
+            1 => dim = Dimension::Xyz,
+            2 => dim = Dimension::Xym,
+            3 => dim = Dimension::Xyzm,
             _ => (),
         };
 
@@ -113,9 +113,9 @@ impl WkbGeometryCode {
         let is_ewkb_m = code & EWKB_FLAG_M == EWKB_FLAG_M;
 
         match (is_ewkb_z, is_ewkb_m) {
-            (true, true) => dim = WkbDimension::Xyzm,
-            (true, false) => dim = WkbDimension::Xyz,
-            (false, true) => dim = WkbDimension::Xym,
+            (true, true) => dim = Dimension::Xyzm,
+            (true, false) => dim = Dimension::Xyz,
+            (false, true) => dim = Dimension::Xym,
             _ => (),
         }
 
@@ -142,19 +142,19 @@ impl WkbGeometryCode {
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub(crate) enum WkbType {
     /// A WKB Point
-    Point(WkbDimension),
+    Point(Dimension),
     /// A WKB LineString
-    LineString(WkbDimension),
+    LineString(Dimension),
     /// A WKB Polygon
-    Polygon(WkbDimension),
+    Polygon(Dimension),
     /// A WKB MultiPoint
-    MultiPoint(WkbDimension),
+    MultiPoint(Dimension),
     /// A WKB MultiLineString
-    MultiLineString(WkbDimension),
+    MultiLineString(Dimension),
     /// A WKB MultiPolygon
-    MultiPolygon(WkbDimension),
+    MultiPolygon(Dimension),
     /// A WKB GeometryCollection
-    GeometryCollection(WkbDimension),
+    GeometryCollection(Dimension),
 }
 
 impl WkbType {

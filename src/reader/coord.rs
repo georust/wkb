@@ -1,6 +1,6 @@
 use std::io::Cursor;
 
-use crate::common::WkbDimension;
+use crate::common::Dimension;
 use crate::reader::util::ReadBytesExt;
 use crate::Endianness;
 use geo_traits::{CoordTrait, Dimensions};
@@ -31,16 +31,11 @@ pub struct Coord<'a> {
     /// `Point` objects.
     offset: u64,
 
-    dim: WkbDimension,
+    dim: Dimension,
 }
 
 impl<'a> Coord<'a> {
-    pub(crate) fn new(
-        buf: &'a [u8],
-        byte_order: Endianness,
-        offset: u64,
-        dim: WkbDimension,
-    ) -> Self {
+    pub(crate) fn new(buf: &'a [u8], byte_order: Endianness, offset: u64, dim: Dimension) -> Self {
         Self {
             buf,
             byte_order,
