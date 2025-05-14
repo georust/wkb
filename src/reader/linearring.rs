@@ -1,13 +1,14 @@
 use std::io::Cursor;
 
-use geo_traits::{GeometryTrait, LineStringTrait};
+use geo_traits::{
+    GeometryTrait, LineStringTrait, UnimplementedGeometryCollection, UnimplementedLine,
+    UnimplementedMultiLineString, UnimplementedMultiPoint, UnimplementedMultiPolygon,
+    UnimplementedPoint, UnimplementedPolygon, UnimplementedRect, UnimplementedTriangle,
+};
 
 use crate::common::Dimension;
 use crate::reader::coord::Coord;
 use crate::reader::util::ReadBytesExt;
-use crate::reader::{
-    GeometryCollection, MultiLineString, MultiPoint, MultiPolygon, Point, Polygon,
-};
 use crate::Endianness;
 
 /// A linear ring in a WKB buffer.
@@ -119,7 +120,7 @@ impl<'a> LineStringTrait for &LinearRing<'a> {
 impl<'a> GeometryTrait for LinearRing<'a> {
     type T = f64;
     type PointType<'b>
-        = Point<'a>
+        = UnimplementedPoint<f64>
     where
         Self: 'b;
     type LineStringType<'b>
@@ -127,35 +128,35 @@ impl<'a> GeometryTrait for LinearRing<'a> {
     where
         Self: 'b;
     type PolygonType<'b>
-        = Polygon<'a>
+        = UnimplementedPolygon<f64>
     where
         Self: 'b;
     type MultiPointType<'b>
-        = MultiPoint<'a>
+        = UnimplementedMultiPoint<f64>
     where
         Self: 'b;
     type MultiLineStringType<'b>
-        = MultiLineString<'a>
+        = UnimplementedMultiLineString<f64>
     where
         Self: 'b;
     type MultiPolygonType<'b>
-        = MultiPolygon<'a>
+        = UnimplementedMultiPolygon<f64>
     where
         Self: 'b;
     type GeometryCollectionType<'b>
-        = GeometryCollection<'a>
+        = UnimplementedGeometryCollection<f64>
     where
         Self: 'b;
     type RectType<'b>
-        = geo_traits::UnimplementedRect<f64>
+        = UnimplementedRect<f64>
     where
         Self: 'b;
     type LineType<'b>
-        = geo_traits::UnimplementedLine<f64>
+        = UnimplementedLine<f64>
     where
         Self: 'b;
     type TriangleType<'b>
-        = geo_traits::UnimplementedTriangle<f64>
+        = UnimplementedTriangle<f64>
     where
         Self: 'b;
 
@@ -185,7 +186,7 @@ impl<'a> GeometryTrait for LinearRing<'a> {
 impl<'a> GeometryTrait for &LinearRing<'a> {
     type T = f64;
     type PointType<'b>
-        = Point<'a>
+        = UnimplementedPoint<f64>
     where
         Self: 'b;
     type LineStringType<'b>
@@ -193,35 +194,35 @@ impl<'a> GeometryTrait for &LinearRing<'a> {
     where
         Self: 'b;
     type PolygonType<'b>
-        = Polygon<'a>
+        = UnimplementedPolygon<f64>
     where
         Self: 'b;
     type MultiPointType<'b>
-        = MultiPoint<'a>
+        = UnimplementedMultiPoint<f64>
     where
         Self: 'b;
     type MultiLineStringType<'b>
-        = MultiLineString<'a>
+        = UnimplementedMultiLineString<f64>
     where
         Self: 'b;
     type MultiPolygonType<'b>
-        = MultiPolygon<'a>
+        = UnimplementedMultiPolygon<f64>
     where
         Self: 'b;
     type GeometryCollectionType<'b>
-        = GeometryCollection<'a>
+        = UnimplementedGeometryCollection<f64>
     where
         Self: 'b;
     type RectType<'b>
-        = geo_traits::UnimplementedRect<f64>
+        = UnimplementedRect<f64>
     where
         Self: 'b;
     type LineType<'b>
-        = geo_traits::UnimplementedLine<f64>
+        = UnimplementedLine<f64>
     where
         Self: 'b;
     type TriangleType<'b>
-        = geo_traits::UnimplementedTriangle<f64>
+        = UnimplementedTriangle<f64>
     where
         Self: 'b;
 
