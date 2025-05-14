@@ -4,7 +4,7 @@
 
 - Your change here.
 
-## 0.9.0 - unreleased
+## 0.9.0 - 2025-05-14
 
 - **BREAKING**: Standardize capitalization of `Wkb` in the codebase.
   - `WKBResult` is now `WkbResult`.
