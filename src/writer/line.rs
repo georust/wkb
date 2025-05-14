@@ -1,6 +1,10 @@
 use std::io::Write;
 
-use geo_traits::{LineStringTrait, LineTrait};
+use geo_traits::{
+    GeometryTrait, LineStringTrait, LineTrait, UnimplementedGeometryCollection, UnimplementedLine,
+    UnimplementedMultiLineString, UnimplementedMultiPoint, UnimplementedMultiPolygon,
+    UnimplementedPoint, UnimplementedPolygon, UnimplementedRect, UnimplementedTriangle,
+};
 
 use crate::error::WkbResult;
 use crate::writer::{line_string_wkb_size, write_line_string, WriteOptions};
@@ -9,16 +13,11 @@ use crate::writer::{line_string_wkb_size, write_line_string, WriteOptions};
 struct LineWrapper<'a, G: LineTrait<T = f64>>(&'a G);
 
 impl<'a, G: LineTrait<T = f64>> LineStringTrait for LineWrapper<'a, G> {
-    type T = f64;
     type CoordType<'b>
         = G::CoordType<'a>
     where
         G: 'b,
         Self: 'b;
-
-    fn dim(&self) -> geo_traits::Dimensions {
-        self.0.dim()
-    }
 
     fn num_coords(&self) -> usize {
         2
@@ -45,4 +44,70 @@ pub fn write_line(
     options: &WriteOptions,
 ) -> WkbResult<()> {
     write_line_string(writer, &LineWrapper(geom), options)
+}
+
+impl<G: LineTrait<T = f64>> GeometryTrait for LineWrapper<'_, G> {
+    type T = f64;
+    type PointType<'b>
+        = UnimplementedPoint<f64>
+    where
+        Self: 'b;
+    type LineStringType<'b>
+        = Self
+    where
+        Self: 'b;
+    type PolygonType<'b>
+        = UnimplementedPolygon<f64>
+    where
+        Self: 'b;
+    type MultiPointType<'b>
+        = UnimplementedMultiPoint<f64>
+    where
+        Self: 'b;
+    type MultiLineStringType<'b>
+        = UnimplementedMultiLineString<f64>
+    where
+        Self: 'b;
+    type MultiPolygonType<'b>
+        = UnimplementedMultiPolygon<f64>
+    where
+        Self: 'b;
+    type GeometryCollectionType<'b>
+        = UnimplementedGeometryCollection<f64>
+    where
+        Self: 'b;
+    type RectType<'b>
+        = UnimplementedRect<f64>
+    where
+        Self: 'b;
+    type LineType<'b>
+        = UnimplementedLine<f64>
+    where
+        Self: 'b;
+    type TriangleType<'b>
+        = UnimplementedTriangle<f64>
+    where
+        Self: 'b;
+
+    fn dim(&self) -> geo_traits::Dimensions {
+        self.0.dim()
+    }
+
+    fn as_type(
+        &self,
+    ) -> geo_traits::GeometryType<
+        '_,
+        Self::PointType<'_>,
+        Self::LineStringType<'_>,
+        Self::PolygonType<'_>,
+        Self::MultiPointType<'_>,
+        Self::MultiLineStringType<'_>,
+        Self::MultiPolygonType<'_>,
+        Self::GeometryCollectionType<'_>,
+        Self::RectType<'_>,
+        Self::TriangleType<'_>,
+        Self::LineType<'_>,
+    > {
+        geo_traits::GeometryType::LineString(self)
+    }
 }

@@ -4,7 +4,6 @@ use crate::common::Dimension;
 use crate::reader::linearring::LinearRing;
 use crate::reader::util::{has_srid, ReadBytesExt};
 use crate::Endianness;
-use geo_traits::Dimensions;
 use geo_traits::PolygonTrait;
 
 /// skip endianness and wkb type
@@ -75,15 +74,10 @@ impl<'a> Polygon<'a> {
 }
 
 impl<'a> PolygonTrait for Polygon<'a> {
-    type T = f64;
     type RingType<'b>
         = &'b LinearRing<'a>
     where
         Self: 'b;
-
-    fn dim(&self) -> Dimensions {
-        self.dim.into()
-    }
 
     fn num_interiors(&self) -> usize {
         // Support an empty polygon with no rings
@@ -108,15 +102,10 @@ impl<'a> PolygonTrait for Polygon<'a> {
 }
 
 impl<'a, 'b> PolygonTrait for &'b Polygon<'a> {
-    type T = f64;
     type RingType<'c>
         = &'b LinearRing<'a>
     where
         Self: 'c;
-
-    fn dim(&self) -> Dimensions {
-        self.dim.into()
-    }
 
     fn num_interiors(&self) -> usize {
         // Support an empty polygon with no rings
