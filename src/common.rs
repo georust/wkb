@@ -161,10 +161,10 @@ impl WkbType {
     /// Construct from a byte slice representing a WKB geometry
     pub(crate) fn from_buffer(buf: &[u8]) -> WkbResult<Self> {
         let mut reader = Cursor::new(buf);
-        let byte_order = reader.read_u8().unwrap();
+        let byte_order = reader.read_u8()?;
         let geometry_code = match byte_order {
-            0 => reader.read_u32::<BigEndian>().unwrap(),
-            1 => reader.read_u32::<LittleEndian>().unwrap(),
+            0 => reader.read_u32::<BigEndian>()?,
+            1 => reader.read_u32::<LittleEndian>()?,
             other => {
                 return Err(WkbError::General(format!(
                     "Unexpected byte order: {}",

@@ -1,6 +1,7 @@
 use std::io::Cursor;
 
 use crate::common::Dimension;
+use crate::error::{WkbError, WkbResult};
 use crate::reader::linestring::LineString;
 use crate::reader::util::{has_srid, ReadBytesExt};
 use crate::Endianness;
@@ -20,16 +21,28 @@ pub struct MultiLineString<'a> {
 }
 
 impl<'a> MultiLineString<'a> {
+    #[allow(dead_code)]
     pub(crate) fn new(buf: &'a [u8], byte_order: Endianness, dim: Dimension) -> Self {
+        Self::try_new(buf, byte_order, dim).unwrap()
+    }
+
+    pub(crate) fn try_new(
+        buf: &'a [u8],
+        byte_order: Endianness,
+        dim: Dimension,
+    ) -> WkbResult<Self> {
         let mut offset = 0;
-        let has_srid = has_srid(buf, byte_order, offset);
+        let has_srid = has_srid(buf, byte_order, offset)?;
         if has_srid {
             offset += 4;
         }
 
         let mut reader = Cursor::new(buf);
         reader.set_position(HEADER_BYTES + offset);
-        let num_line_strings = reader.read_u32(byte_order).unwrap().try_into().unwrap();
+        let num_line_strings = reader
+            .read_u32(byte_order)?
+            .try_into()
+            .map_err(|e| WkbError::General(format!("Invalid number of line strings: {}", e)))?;
 
         // - 1: byteOrder
         // - 4: wkbType
@@ -41,16 +54,16 @@ impl<'a> MultiLineString<'a> {
 
         let mut wkb_line_strings = Vec::with_capacity(num_line_strings);
         for _ in 0..num_line_strings {
-            let ls = LineString::new(buf, byte_order, line_string_offset, dim);
+            let ls = LineString::try_new(buf, byte_order, line_string_offset, dim)?;
             wkb_line_strings.push(ls);
             line_string_offset += ls.size();
         }
 
-        Self {
+        Ok(Self {
             wkb_line_strings,
             dim,
             has_srid,
-        }
+        })
     }
 
     /// The number of bytes in this object, including any header

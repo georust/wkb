@@ -1,6 +1,7 @@
 use std::io::Cursor;
 
 use crate::common::Dimension;
+use crate::error::{WkbError, WkbResult};
 use crate::reader::linearring::LinearRing;
 use crate::reader::util::{has_srid, ReadBytesExt};
 use crate::Endianness;
@@ -20,8 +21,17 @@ pub struct Polygon<'a> {
 }
 
 impl<'a> Polygon<'a> {
-    pub fn new(buf: &'a [u8], byte_order: Endianness, mut offset: u64, dim: Dimension) -> Self {
-        let has_srid = has_srid(buf, byte_order, offset);
+    pub fn new(buf: &'a [u8], byte_order: Endianness, offset: u64, dim: Dimension) -> Self {
+        Self::try_new(buf, byte_order, offset, dim).unwrap()
+    }
+
+    pub fn try_new(
+        buf: &'a [u8],
+        byte_order: Endianness,
+        mut offset: u64,
+        dim: Dimension,
+    ) -> WkbResult<Self> {
+        let has_srid = has_srid(buf, byte_order, offset)?;
         if has_srid {
             offset += 4;
         }
@@ -29,7 +39,10 @@ impl<'a> Polygon<'a> {
         let mut reader = Cursor::new(buf);
         reader.set_position(HEADER_BYTES + offset);
 
-        let num_rings = reader.read_u32(byte_order).unwrap().try_into().unwrap();
+        let num_rings = reader
+            .read_u32(byte_order)?
+            .try_into()
+            .map_err(|e| WkbError::General(format!("Invalid number of rings: {}", e)))?;
 
         // - existing offset into buffer
         // - 1: byteOrder
@@ -38,16 +51,16 @@ impl<'a> Polygon<'a> {
         let mut ring_offset = offset + 1 + 4 + 4;
         let mut wkb_linear_rings = Vec::with_capacity(num_rings);
         for _ in 0..num_rings {
-            let polygon = LinearRing::new(buf, byte_order, ring_offset, dim);
+            let polygon = LinearRing::try_new(buf, byte_order, ring_offset, dim)?;
             wkb_linear_rings.push(polygon);
             ring_offset += polygon.size();
         }
 
-        Self {
+        Ok(Self {
             wkb_linear_rings,
             dim,
             has_srid,
-        }
+        })
     }
 
     /// The number of bytes in this object, including any header

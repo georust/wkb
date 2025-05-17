@@ -1,6 +1,7 @@
 use std::io::Cursor;
 
 use crate::common::Dimension;
+use crate::error::{WkbError, WkbResult};
 use crate::reader::point::Point;
 use crate::reader::util::{has_srid, ReadBytesExt};
 use crate::Endianness;
@@ -21,9 +22,18 @@ pub struct MultiPoint<'a> {
 }
 
 impl<'a> MultiPoint<'a> {
+    #[allow(dead_code)]
     pub(crate) fn new(buf: &'a [u8], byte_order: Endianness, dim: Dimension) -> Self {
+        Self::try_new(buf, byte_order, dim).unwrap()
+    }
+
+    pub(crate) fn try_new(
+        buf: &'a [u8],
+        byte_order: Endianness,
+        dim: Dimension,
+    ) -> WkbResult<Self> {
         let mut offset = 0;
-        let has_srid = has_srid(buf, byte_order, offset);
+        let has_srid = has_srid(buf, byte_order, offset)?;
         if has_srid {
             offset += 4;
         }
@@ -31,15 +41,33 @@ impl<'a> MultiPoint<'a> {
         let mut reader = Cursor::new(buf);
         // Set reader to after 1-byte byteOrder and 4-byte wkbType
         reader.set_position(1 + 4 + offset);
-        let num_points = reader.read_u32(byte_order).unwrap().try_into().unwrap();
+        let num_points = reader
+            .read_u32(byte_order)?
+            .try_into()
+            .map_err(|e| WkbError::General(format!("Invalid number of points: {}", e)))?;
 
-        Self {
+        let multipoint = Self {
             buf,
             byte_order,
             num_points,
             dim,
             has_srid,
+        };
+
+        let end_offset = multipoint.point_offset(num_points as u64);
+        if end_offset > buf.len() as u64 {
+            return Self::handle_invalid_buffer_length(end_offset, buf.len());
         }
+
+        Ok(multipoint)
+    }
+
+    #[cold]
+    fn handle_invalid_buffer_length(expected_end_abs: u64, buf_len: usize) -> WkbResult<Self> {
+        Err(WkbError::General(format!(
+            "Invalid buffer length for MultiPoint: geometry would end at byte {}, but buffer length is {}.",
+            expected_end_abs, buf_len
+        )))
     }
 
     /// The number of bytes in this object, including any header

@@ -1,4 +1,5 @@
 use crate::common::Dimension;
+use crate::error::{WkbError, WkbResult};
 use crate::reader::coord::Coord;
 use crate::reader::util::has_srid;
 use crate::Endianness;
@@ -20,13 +21,27 @@ pub struct Point<'a> {
 
 impl<'a> Point<'a> {
     pub(crate) fn new(buf: &'a [u8], byte_order: Endianness, offset: u64, dim: Dimension) -> Self {
-        let has_srid = has_srid(buf, byte_order, offset);
+        Self::try_new(buf, byte_order, offset, dim).unwrap()
+    }
+
+    pub(crate) fn try_new(
+        buf: &'a [u8],
+        byte_order: Endianness,
+        offset: u64,
+        dim: Dimension,
+    ) -> WkbResult<Self> {
+        let has_srid = has_srid(buf, byte_order, offset)?;
 
         // The space of the byte order + geometry type
         let mut offset = offset + 5;
         if has_srid {
             // Skip SRID bytes if they exist
             offset += 4;
+        }
+
+        let expected_end = offset as usize + dim.size() * 8;
+        if buf.len() < expected_end {
+            return Self::handle_invalid_buffer_length(offset, expected_end, buf.len());
         }
 
         let coord = Coord::new(buf, byte_order, offset, dim);
@@ -39,12 +54,24 @@ impl<'a> Point<'a> {
             }
             .is_nan()
         });
-        Self {
+        Ok(Self {
             coord,
             dim,
             is_empty,
             has_srid,
-        }
+        })
+    }
+
+    #[cold]
+    fn handle_invalid_buffer_length(
+        offset: u64,
+        expected_end: usize,
+        buf_len: usize,
+    ) -> WkbResult<Self> {
+        Err(WkbError::General(format!(
+            "Invalid buffer length for Point: geometry starting at offset {} would end at byte {}, but buffer length is {}.",
+            offset, expected_end, buf_len
+        )))
     }
 
     /// The number of bytes in this object, including any header
