@@ -1,7 +1,6 @@
 use byteorder::{BigEndian, LittleEndian};
 
-use crate::common::WkbGeometryCode;
-use crate::Endianness;
+use crate::{common::WkbGeometryCode, error::WkbError, Endianness};
 use std::io::{Cursor, Error};
 
 pub(crate) trait ReadBytesExt: byteorder::ReadBytesExt {
@@ -25,13 +24,13 @@ pub(crate) trait ReadBytesExt: byteorder::ReadBytesExt {
 impl<R: std::io::Read + ?Sized> ReadBytesExt for R {}
 
 /// Return `true` if this WKB item is EWKB and has an embedded SRID
-pub(crate) fn has_srid(buf: &[u8], byte_order: Endianness, offset: u64) -> bool {
+pub(crate) fn has_srid(buf: &[u8], byte_order: Endianness, offset: u64) -> Result<bool, WkbError> {
     // Read geometry code to see if an SRID exists.
     let mut reader = Cursor::new(buf);
 
     // Skip 1-byte byte order that we already know
     reader.set_position(1 + offset);
 
-    let geometry_code = WkbGeometryCode::new(reader.read_u32(byte_order).unwrap());
-    geometry_code.has_srid()
+    let geometry_code = WkbGeometryCode::new(reader.read_u32(byte_order)?);
+    Ok(geometry_code.has_srid())
 }

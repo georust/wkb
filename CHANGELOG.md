@@ -2,7 +2,7 @@
 
 ## Unreleased
 
-- Your change here.
+- Don't panic when parsing invalid WKB (#74).
 
 ## 0.9.0 - 2025-05-14
 

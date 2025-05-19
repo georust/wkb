@@ -1,6 +1,7 @@
 use std::io::Cursor;
 
 use crate::common::Dimension;
+use crate::error::{WkbError, WkbResult};
 use crate::reader::coord::Coord;
 use crate::reader::util::{has_srid, ReadBytesExt};
 use crate::Endianness;
@@ -27,24 +28,59 @@ pub struct LineString<'a> {
 }
 
 impl<'a> LineString<'a> {
-    pub fn new(buf: &'a [u8], byte_order: Endianness, mut offset: u64, dim: Dimension) -> Self {
-        let has_srid = has_srid(buf, byte_order, offset);
+    pub fn new(buf: &'a [u8], byte_order: Endianness, offset: u64, dim: Dimension) -> Self {
+        Self::try_new(buf, byte_order, offset, dim).unwrap()
+    }
+
+    pub fn try_new(
+        buf: &'a [u8],
+        byte_order: Endianness,
+        mut offset: u64,
+        dim: Dimension,
+    ) -> WkbResult<Self> {
+        let has_srid = has_srid(buf, byte_order, offset)?;
         if has_srid {
             offset += 4;
         }
 
         let mut reader = Cursor::new(buf);
         reader.set_position(HEADER_BYTES + offset);
-        let num_points = reader.read_u32(byte_order).unwrap().try_into().unwrap();
+        let num_points = reader
+            .read_u32(byte_order)?
+            .try_into()
+            .map_err(|e| WkbError::General(format!("Invalid number of points: {}", e)))?;
 
-        Self {
+        let linestring = Self {
             buf,
             byte_order,
             num_points,
             offset,
             dim,
             has_srid,
+        };
+
+        let expected_end_abs = linestring.coord_offset(num_points as u64);
+        if expected_end_abs > buf.len() as u64 {
+            return Self::handle_invalid_buffer_length(
+                linestring.offset,
+                expected_end_abs,
+                buf.len(),
+            );
         }
+
+        Ok(linestring)
+    }
+
+    #[cold]
+    fn handle_invalid_buffer_length(
+        offset: u64,
+        expected_end_abs: u64,
+        buf_len: usize,
+    ) -> WkbResult<Self> {
+        Err(WkbError::General(format!(
+            "Invalid buffer length for LineString: geometry starting at offset {} would end at byte {}, but buffer length is {}.",
+            offset, expected_end_abs, buf_len
+        )))
     }
 
     /// The number of bytes in this object, including any header

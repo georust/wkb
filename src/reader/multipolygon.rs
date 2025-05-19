@@ -1,6 +1,7 @@
 use std::io::Cursor;
 
 use crate::common::Dimension;
+use crate::error::{WkbError, WkbResult};
 use crate::reader::polygon::Polygon;
 use crate::reader::util::{has_srid, ReadBytesExt};
 use crate::Endianness;
@@ -20,16 +21,28 @@ pub struct MultiPolygon<'a> {
 }
 
 impl<'a> MultiPolygon<'a> {
+    #[allow(dead_code)]
     pub(crate) fn new(buf: &'a [u8], byte_order: Endianness, dim: Dimension) -> Self {
+        Self::try_new(buf, byte_order, dim).unwrap()
+    }
+
+    pub(crate) fn try_new(
+        buf: &'a [u8],
+        byte_order: Endianness,
+        dim: Dimension,
+    ) -> WkbResult<Self> {
         let mut offset = 0;
-        let has_srid = has_srid(buf, byte_order, offset);
+        let has_srid = has_srid(buf, byte_order, offset)?;
         if has_srid {
             offset += 4;
         }
 
         let mut reader = Cursor::new(buf);
         reader.set_position(HEADER_BYTES + offset);
-        let num_polygons = reader.read_u32(byte_order).unwrap().try_into().unwrap();
+        let num_polygons = reader
+            .read_u32(byte_order)?
+            .try_into()
+            .map_err(|e| WkbError::General(format!("Invalid number of polygons: {}", e)))?;
 
         // - 1: byteOrder
         // - 4: wkbType
@@ -41,16 +54,16 @@ impl<'a> MultiPolygon<'a> {
 
         let mut wkb_polygons = Vec::with_capacity(num_polygons);
         for _ in 0..num_polygons {
-            let polygon = Polygon::new(buf, byte_order, polygon_offset, dim);
+            let polygon = Polygon::try_new(buf, byte_order, polygon_offset, dim)?;
             polygon_offset += polygon.size();
             wkb_polygons.push(polygon);
         }
 
-        Self {
+        Ok(Self {
             wkb_polygons,
             dim,
             has_srid,
-        }
+        })
     }
 
     /// The number of bytes in this object, including any header

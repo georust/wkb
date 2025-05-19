@@ -3,7 +3,7 @@ use std::io::Cursor;
 use byteorder::ReadBytesExt;
 
 use crate::common::{Dimension, WkbType};
-use crate::error::WkbResult;
+use crate::error::{WkbError, WkbResult};
 use crate::reader::{
     GeometryCollection, GeometryType, LineString, MultiLineString, MultiPoint, MultiPolygon, Point,
     Polygon,
@@ -98,19 +98,24 @@ pub(crate) enum WkbInner<'a> {
 impl<'a> WkbInner<'a> {
     fn try_new(buf: &'a [u8]) -> WkbResult<Self> {
         let mut reader = Cursor::new(buf);
-        let byte_order = Endianness::try_from(reader.read_u8()?).unwrap();
+        let byte_order = Endianness::try_from(reader.read_u8()?)
+            .map_err(|_| WkbError::General("Invalid byte order".to_string()))?;
         let wkb_type = WkbType::from_buffer(buf)?;
 
         let out = match wkb_type {
-            WkbType::Point(dim) => Self::Point(Point::new(buf, byte_order, 0, dim)),
-            WkbType::LineString(dim) => Self::LineString(LineString::new(buf, byte_order, 0, dim)),
-            WkbType::Polygon(dim) => Self::Polygon(Polygon::new(buf, byte_order, 0, dim)),
-            WkbType::MultiPoint(dim) => Self::MultiPoint(MultiPoint::new(buf, byte_order, dim)),
+            WkbType::Point(dim) => Self::Point(Point::try_new(buf, byte_order, 0, dim)?),
+            WkbType::LineString(dim) => {
+                Self::LineString(LineString::try_new(buf, byte_order, 0, dim)?)
+            }
+            WkbType::Polygon(dim) => Self::Polygon(Polygon::try_new(buf, byte_order, 0, dim)?),
+            WkbType::MultiPoint(dim) => {
+                Self::MultiPoint(MultiPoint::try_new(buf, byte_order, dim)?)
+            }
             WkbType::MultiLineString(dim) => {
-                Self::MultiLineString(MultiLineString::new(buf, byte_order, dim))
+                Self::MultiLineString(MultiLineString::try_new(buf, byte_order, dim)?)
             }
             WkbType::MultiPolygon(dim) => {
-                Self::MultiPolygon(MultiPolygon::new(buf, byte_order, dim))
+                Self::MultiPolygon(MultiPolygon::try_new(buf, byte_order, dim)?)
             }
             WkbType::GeometryCollection(dim) => {
                 Self::GeometryCollection(GeometryCollection::try_new(buf, byte_order, dim)?)

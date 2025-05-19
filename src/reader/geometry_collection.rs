@@ -1,7 +1,7 @@
 use std::io::Cursor;
 
 use crate::common::Dimension;
-use crate::error::WkbResult;
+use crate::error::{WkbError, WkbResult};
 use crate::reader::util::{has_srid, ReadBytesExt};
 use crate::reader::Wkb;
 use crate::Endianness;
@@ -22,14 +22,17 @@ pub struct GeometryCollection<'a> {
 impl<'a> GeometryCollection<'a> {
     pub fn try_new(buf: &'a [u8], byte_order: Endianness, dim: Dimension) -> WkbResult<Self> {
         let mut offset = 0;
-        let has_srid = has_srid(buf, byte_order, offset);
+        let has_srid = has_srid(buf, byte_order, offset)?;
         if has_srid {
             offset += 4;
         }
 
         let mut reader = Cursor::new(buf);
         reader.set_position(HEADER_BYTES + offset);
-        let num_geometries = reader.read_u32(byte_order).unwrap().try_into().unwrap();
+        let num_geometries = reader
+            .read_u32(byte_order)?
+            .try_into()
+            .map_err(|e| WkbError::General(format!("Invalid number of geometries: {}", e)))?;
 
         // - 1: byteOrder
         // - 4: wkbType
