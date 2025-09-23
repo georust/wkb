@@ -31,6 +31,7 @@ jobs:
       - run: cargo clippy --all-features --all-targets -- -Dwarnings
       - run: cargo test --all-features
       - run: cargo test --no-default-features
-      # We run this on CI as a test that recursive writing of geometry/geometry
-      # collections can compile. See https://github.com/kylebarron/wkb/issues/15
-      - run: cargo bench --bench parse
+      # Ensure that we're not hitting rustc regressions that only appear in
+      # release mode, see https://github.com/georust/wkb/issues/15,
+      # https://github.com/georust/wkb/pull/77
+      - run: cargo build --release
