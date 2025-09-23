@@ -39,7 +39,7 @@ fn write_multi_point_content<B: ByteOrder>(
     writer.write_u32::<B>(wkb_type.into())?;
 
     // numPoints
-    writer.write_u32::<B>(geom.num_points().try_into().unwrap())?;
+    writer.write_u32::<B>(geom.num_points().try_into()?)?;
 
     for point in geom.points() {
         write_point(writer, &point, options)?;

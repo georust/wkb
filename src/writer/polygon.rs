@@ -53,10 +53,10 @@ fn write_polygon_content<B: ByteOrder>(
     } else {
         0
     };
-    writer.write_u32::<B>(num_rings.try_into().unwrap())?;
+    writer.write_u32::<B>(num_rings.try_into()?)?;
 
     if let Some(ext_ring) = geom.exterior() {
-        writer.write_u32::<B>(ext_ring.num_coords().try_into().unwrap())?;
+        writer.write_u32::<B>(ext_ring.num_coords().try_into()?)?;
 
         for coord in ext_ring.coords() {
             write_coord::<B>(writer, &coord)?;
@@ -64,7 +64,7 @@ fn write_polygon_content<B: ByteOrder>(
     }
 
     for int_ring in geom.interiors() {
-        writer.write_u32::<B>(int_ring.num_coords().try_into().unwrap())?;
+        writer.write_u32::<B>(int_ring.num_coords().try_into()?)?;
 
         for coord in int_ring.coords() {
             write_coord::<B>(writer, &coord)?;
