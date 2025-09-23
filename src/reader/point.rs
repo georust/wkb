@@ -20,10 +20,6 @@ pub struct Point<'a> {
 }
 
 impl<'a> Point<'a> {
-    pub(crate) fn new(buf: &'a [u8], byte_order: Endianness, offset: u64, dim: Dimension) -> Self {
-        Self::try_new(buf, byte_order, offset, dim).unwrap()
-    }
-
     pub(crate) fn try_new(
         buf: &'a [u8],
         byte_order: Endianness,

@@ -21,11 +21,6 @@ pub struct MultiPolygon<'a> {
 }
 
 impl<'a> MultiPolygon<'a> {
-    #[allow(dead_code)]
-    pub(crate) fn new(buf: &'a [u8], byte_order: Endianness, dim: Dimension) -> Self {
-        Self::try_new(buf, byte_order, dim).unwrap()
-    }
-
     pub(crate) fn try_new(
         buf: &'a [u8],
         byte_order: Endianness,

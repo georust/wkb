@@ -21,11 +21,7 @@ pub struct Polygon<'a> {
 }
 
 impl<'a> Polygon<'a> {
-    pub fn new(buf: &'a [u8], byte_order: Endianness, offset: u64, dim: Dimension) -> Self {
-        Self::try_new(buf, byte_order, offset, dim).unwrap()
-    }
-
-    pub fn try_new(
+    pub(crate) fn try_new(
         buf: &'a [u8],
         byte_order: Endianness,
         mut offset: u64,

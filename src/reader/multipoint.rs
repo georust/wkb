@@ -22,11 +22,6 @@ pub struct MultiPoint<'a> {
 }
 
 impl<'a> MultiPoint<'a> {
-    #[allow(dead_code)]
-    pub(crate) fn new(buf: &'a [u8], byte_order: Endianness, dim: Dimension) -> Self {
-        Self::try_new(buf, byte_order, dim).unwrap()
-    }
-
     pub(crate) fn try_new(
         buf: &'a [u8],
         byte_order: Endianness,
@@ -113,12 +108,13 @@ impl<'a> MultiPointTrait for MultiPoint<'a> {
     }
 
     unsafe fn point_unchecked(&self, i: usize) -> Self::InnerPointType<'_> {
-        Point::new(
+        Point::try_new(
             self.buf,
             self.byte_order,
             self.point_offset(i.try_into().unwrap()),
             self.dim,
         )
+        .unwrap()
     }
 }
 
@@ -133,11 +129,12 @@ impl<'a> MultiPointTrait for &MultiPoint<'a> {
     }
 
     unsafe fn point_unchecked(&self, i: usize) -> Self::InnerPointType<'_> {
-        Point::new(
+        Point::try_new(
             self.buf,
             self.byte_order,
             self.point_offset(i.try_into().unwrap()),
             self.dim,
         )
+        .unwrap()
     }
 }
