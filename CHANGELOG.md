@@ -3,8 +3,9 @@
 ## Unreleased
 
 - Don't panic when parsing invalid WKB (#74).
-- Fix CI by removing georust container & fix clippy lint (#140)
+- Fix CI by removing georust container & fix clippy lint (#78)
 - Add lint warning for missing docs #80
+- Remove unnecessary `unwrap`s #79
 
 ## 0.9.0 - 2025-05-14
 
