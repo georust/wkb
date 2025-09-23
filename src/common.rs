@@ -15,9 +15,13 @@ const EWKB_FLAG_SRID: u32 = 0x20000000;
 /// Supported WKB dimensions
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub enum Dimension {
+    /// 2D: X and Y
     Xy,
+    /// 3D: X, Y, and Z
     Xyz,
+    /// 3D: X, Y, and M
     Xym,
+    /// 4D: X, Y, Z, and M
     Xyzm,
 }
 
@@ -199,7 +203,9 @@ impl From<WkbType> for u32 {
 #[derive(Debug, Clone, Copy, Default, TryFromPrimitive, IntoPrimitive)]
 #[repr(u8)]
 pub enum Endianness {
+    /// Big endian
     BigEndian = 0,
+    /// Little endian
     #[default]
     LittleEndian = 1,
 }
