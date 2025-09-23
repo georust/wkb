@@ -52,18 +52,3 @@ fn write_multi_polygon_content<B: ByteOrder>(
 
     Ok(())
 }
-
-// #[cfg(test)]
-// mod test {
-//     use super::*;
-//     use crate::test::multipolygon::{mp0, mp1};
-
-//     #[test]
-//     fn round_trip() {
-//         let orig_arr: MultiPolygonArray<2> = vec![Some(mp0()), Some(mp1()), None].into();
-//         let wkb_arr: WKBArray<i32> = (&orig_arr).into();
-//         let new_arr: MultiPolygonArray<2> = wkb_arr.try_into().unwrap();
-
-//         assert_eq!(orig_arr, new_arr);
-//     }
-// }

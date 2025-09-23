@@ -55,28 +55,3 @@ fn write_geometry_collection_content<B: ByteOrder>(
 
     Ok(())
 }
-
-// #[cfg(test)]
-// mod test {
-//     use super::*;
-//     use crate::test::multipoint;
-//     use crate::test::multipolygon;
-
-//     #[test]
-//     fn round_trip() {
-//         let gc0 = geo::GeometryCollection::new_from(vec![
-//             geo::Geometry::MultiPoint(multipoint::mp0()),
-//             geo::Geometry::MultiPolygon(multipolygon::mp0()),
-//         ]);
-//         let gc1 = geo::GeometryCollection::new_from(vec![
-//             geo::Geometry::MultiPoint(multipoint::mp1()),
-//             geo::Geometry::MultiPolygon(multipolygon::mp1()),
-//         ]);
-
-//         let orig_arr: GeometryCollectionArray<i32> = vec![Some(gc0), Some(gc1), None].into();
-//         let wkb_arr: WKBArray<i32> = (&orig_arr).into();
-//         let new_arr: GeometryCollectionArray<i32> = wkb_arr.try_into().unwrap();
-
-//         assert_eq!(orig_arr, new_arr);
-//     }
-// }
