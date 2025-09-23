@@ -39,7 +39,7 @@ fn write_line_string_content<B: ByteOrder>(
     writer.write_u32::<B>(wkb_type.into())?;
 
     // numPoints
-    writer.write_u32::<B>(geom.num_coords().try_into().unwrap())?;
+    writer.write_u32::<B>(geom.num_coords().try_into()?)?;
 
     for coord in geom.coords() {
         write_coord::<B>(writer, &coord)?;

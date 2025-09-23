@@ -47,7 +47,7 @@ fn write_geometry_collection_content<B: ByteOrder>(
     writer.write_u32::<B>(wkb_type.into())?;
 
     // numGeometries
-    writer.write_u32::<B>(geom.num_geometries().try_into().unwrap())?;
+    writer.write_u32::<B>(geom.num_geometries().try_into()?)?;
 
     for inner_geom in geom.geometries() {
         write_geometry(writer, &inner_geom, options)?;

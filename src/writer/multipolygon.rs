@@ -44,7 +44,7 @@ fn write_multi_polygon_content<B: ByteOrder>(
     writer.write_u32::<B>(wkb_type.into())?;
 
     // numPolygons
-    writer.write_u32::<B>(geom.num_polygons().try_into().unwrap())?;
+    writer.write_u32::<B>(geom.num_polygons().try_into()?)?;
 
     for polygon in geom.polygons() {
         write_polygon(writer, &polygon, options)?;
