@@ -122,7 +122,7 @@ impl<'a> LineStringTrait for LineString<'a> {
         Coord::new(
             self.buf,
             self.byte_order,
-            self.coord_offset(i.try_into().unwrap()),
+            self.coord_offset(i as u64),
             self.dim,
         )
     }
@@ -142,7 +142,7 @@ impl<'a> LineStringTrait for &LineString<'a> {
         Coord::new(
             self.buf,
             self.byte_order,
-            self.coord_offset(i.try_into().unwrap()),
+            self.coord_offset(i as u64),
             self.dim,
         )
     }
