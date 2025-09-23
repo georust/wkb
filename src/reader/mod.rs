@@ -15,6 +15,7 @@ mod point;
 mod polygon;
 mod util;
 
+pub use crate::common::Dimension;
 pub use geometry::Wkb;
 use geometry_collection::GeometryCollection;
 use linestring::LineString;

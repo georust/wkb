@@ -14,4 +14,4 @@ pub mod reader;
 mod test;
 pub mod writer;
 
-pub use common::{Dimension, Endianness};
+pub use common::Endianness;
