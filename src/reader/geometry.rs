@@ -41,7 +41,7 @@ impl<'a> Wkb<'a> {
         Ok(Self(inner))
     }
 
-    // Return the [Dimension] of this geometry.
+    /// Return the [Dimension] of this geometry.
     pub fn dimension(&self) -> Dimension {
         use WkbInner::*;
         match &self.0 {
