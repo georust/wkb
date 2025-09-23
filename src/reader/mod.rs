@@ -29,7 +29,7 @@ use crate::error::WkbResult;
 /// Parse a WKB byte slice into a geometry.
 ///
 /// This is an alias for [`Wkb::try_new`].
-pub fn read_wkb(buf: &[u8]) -> WkbResult<Wkb> {
+pub fn read_wkb(buf: &[u8]) -> WkbResult<Wkb<'_>> {
     Wkb::try_new(buf)
 }
 
