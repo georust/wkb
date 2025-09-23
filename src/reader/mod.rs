@@ -40,11 +40,18 @@ pub fn read_wkb(buf: &[u8]) -> WkbResult<Wkb<'_>> {
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
 #[non_exhaustive]
 pub enum GeometryType {
+    /// A WKB Point
     Point,
+    /// A WKB LineString
     LineString,
+    /// A WKB Polygon
     Polygon,
+    /// A WKB MultiPoint
     MultiPoint,
+    /// A WKB MultiLineString
     MultiLineString,
+    /// A WKB MultiPolygon
     MultiPolygon,
+    /// A WKB GeometryCollection
     GeometryCollection,
 }
