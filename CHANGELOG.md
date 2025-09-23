@@ -3,6 +3,7 @@
 ## Unreleased
 
 - Don't panic when parsing invalid WKB (#74).
+- Fix CI by removing georust container & fix clippy lint (#140)
 
 ## 0.9.0 - 2025-05-14
 
