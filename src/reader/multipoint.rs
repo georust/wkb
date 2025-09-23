@@ -116,7 +116,7 @@ impl<'a> MultiPointTrait for MultiPoint<'a> {
         Point::new(
             self.buf,
             self.byte_order,
-            self.point_offset(i.try_into().unwrap()),
+            self.point_offset(i as u64),
             self.dim,
         )
     }
@@ -136,7 +136,7 @@ impl<'a> MultiPointTrait for &MultiPoint<'a> {
         Point::new(
             self.buf,
             self.byte_order,
-            self.point_offset(i.try_into().unwrap()),
+            self.point_offset(i as u64),
             self.dim,
         )
     }

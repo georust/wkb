@@ -46,7 +46,7 @@ fn write_multi_line_string_content<B: ByteOrder>(
     writer.write_u32::<B>(wkb_type.into())?;
 
     // numPoints
-    writer.write_u32::<B>(geom.num_line_strings().try_into().unwrap())?;
+    writer.write_u32::<B>(geom.num_line_strings().try_into()?)?;
 
     for line_string in geom.line_strings() {
         write_line_string(writer, &line_string, options)?;

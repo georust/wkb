@@ -23,6 +23,10 @@ pub enum WkbError {
     /// [std::io::Error]
     #[error(transparent)]
     IOError(#[from] std::io::Error),
+
+    /// Overflow when casting to a u32 to write to WKB buffer
+    #[error(transparent)]
+    OverflowError(#[from] std::num::TryFromIntError),
 }
 
 /// Crate-specific result type.
