@@ -44,7 +44,7 @@ fn write_multi_polygon_content<B: ByteOrder>(
     writer.write_u32::<B>(wkb_type.into())?;
 
     // numPolygons
-    writer.write_u32::<B>(geom.num_polygons().try_into().unwrap())?;
+    writer.write_u32::<B>(geom.num_polygons().try_into()?)?;
 
     for polygon in geom.polygons() {
         write_polygon(writer, &polygon, options)?;
@@ -52,18 +52,3 @@ fn write_multi_polygon_content<B: ByteOrder>(
 
     Ok(())
 }
-
-// #[cfg(test)]
-// mod test {
-//     use super::*;
-//     use crate::test::multipolygon::{mp0, mp1};
-
-//     #[test]
-//     fn round_trip() {
-//         let orig_arr: MultiPolygonArray<2> = vec![Some(mp0()), Some(mp1()), None].into();
-//         let wkb_arr: WKBArray<i32> = (&orig_arr).into();
-//         let new_arr: MultiPolygonArray<2> = wkb_arr.try_into().unwrap();
-
-//         assert_eq!(orig_arr, new_arr);
-//     }
-// }
