@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## 0.9.1 - 2025-09-24
+
 - Don't panic when parsing invalid WKB (#74).
 - Fix CI by removing georust container & fix clippy lint (#78)
 - Remove trait wrappers to work around Rust 1.90 compiler regression (#77)
