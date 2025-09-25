@@ -4,6 +4,7 @@
 
 - Don't panic when parsing invalid WKB (#74).
 - Fix CI by removing georust container & fix clippy lint (#78)
+- Remove trait wrappers to work around Rust 1.90 compiler regression (#77)
 - Add lint warning for missing docs #80
 - Remove unnecessary `unwrap`s #79
 - Expose `Dimension` publicly #82
