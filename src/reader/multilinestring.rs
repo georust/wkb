@@ -83,6 +83,7 @@ impl<'a> MultiLineString<'a> {
             .fold(header, |acc, ls| acc + ls.size())
     }
 
+    /// The dimension of this MultiLineString
     pub fn dimension(&self) -> Dimension {
         self.dim
     }

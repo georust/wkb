@@ -1,5 +1,5 @@
 use geo_traits::to_geo::ToGeoGeometry;
-use geo_traits::{CoordTrait, GeometryTrait, LineStringTrait, PointTrait};
+use geo_traits::{CoordTrait, GeometryTrait, LineStringTrait, PointTrait, PolygonTrait};
 use geo_types::Geometry;
 
 use crate::reader::read_wkb;
@@ -254,6 +254,84 @@ fn round_trip_geometry_collection() {
     .unwrap();
     let retour = read_wkb(&buf).unwrap();
     assert_eq!(Geometry::GeometryCollection(orig), retour.to_geometry());
+}
+
+#[test]
+fn wkb_point_coord_slice() {
+    let p = point_2d();
+    let mut buf = Vec::new();
+    write_point(
+        &mut buf,
+        &p,
+        &WriteOptions {
+            endianness: Endianness::LittleEndian,
+        },
+    )
+    .unwrap();
+    let wkb = read_wkb(&buf).unwrap();
+    let geo_traits::GeometryType::Point(point) = wkb.as_type() else {
+        panic!("Expected Point");
+    };
+    let coord_slice = point.coord_slice();
+    let x = f64::from_le_bytes(coord_slice[0..8].try_into().unwrap());
+    let y = f64::from_le_bytes(coord_slice[8..16].try_into().unwrap());
+    assert_eq!(x, 0.0);
+    assert_eq!(y, 1.0);
+}
+
+#[test]
+fn wkb_linestring_coords_slice() {
+    let ls = linestring_2d();
+    let mut buf = Vec::new();
+    write_line_string(
+        &mut buf,
+        &ls,
+        &WriteOptions {
+            endianness: Endianness::LittleEndian,
+        },
+    )
+    .unwrap();
+    let wkb = read_wkb(&buf).unwrap();
+    let geo_traits::GeometryType::LineString(line_string) = wkb.as_type() else {
+        panic!("Expected LineString");
+    };
+    let coord_slice = line_string.coords_slice();
+    assert_eq!(coord_slice.len(), 32);
+    let x0 = f64::from_le_bytes(coord_slice[0..8].try_into().unwrap());
+    let y0 = f64::from_le_bytes(coord_slice[8..16].try_into().unwrap());
+    let x1 = f64::from_le_bytes(coord_slice[16..24].try_into().unwrap());
+    let y1 = f64::from_le_bytes(coord_slice[24..32].try_into().unwrap());
+    assert_eq!(x0, 0.0);
+    assert_eq!(y0, 1.0);
+    assert_eq!(x1, 1.0);
+    assert_eq!(y1, 2.0);
+}
+
+#[test]
+fn wkb_polygon_coords_slice() {
+    let poly = polygon_2d();
+    let mut buf = Vec::new();
+    write_polygon(
+        &mut buf,
+        &poly,
+        &WriteOptions {
+            endianness: Endianness::LittleEndian,
+        },
+    )
+    .unwrap();
+    let wkb = read_wkb(&buf).unwrap();
+    let geo_traits::GeometryType::Polygon(polygon) = wkb.as_type() else {
+        panic!("Expected Polygon");
+    };
+    let exterior = polygon.exterior().unwrap();
+    let coord_slice = exterior.coords_slice();
+    assert_eq!(coord_slice.len(), 8 * 2 * exterior.num_coords());
+    for (k, coord) in exterior.coords().enumerate() {
+        let x = f64::from_le_bytes(coord_slice[16 * k..16 * k + 8].try_into().unwrap());
+        let y = f64::from_le_bytes(coord_slice[16 * k + 8..16 * k + 16].try_into().unwrap());
+        assert_eq!(x, coord.x());
+        assert_eq!(y, coord.y());
+    }
 }
 
 #[test]

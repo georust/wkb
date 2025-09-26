@@ -40,10 +40,19 @@ pub struct LinearRing<'a> {
 }
 
 impl<'a> LinearRing<'a> {
+    /// Construct a new LinearRing from a WKB buffer.
+    ///
+    /// # Panics
+    ///
+    /// This will panic if the WKB buffer is invalid. For fallible parsing, use
+    /// [`try_new`](Self::try_new) instead.
     pub fn new(buf: &'a [u8], byte_order: Endianness, offset: u64, dim: Dimension) -> Self {
         Self::try_new(buf, byte_order, offset, dim).unwrap()
     }
 
+    /// Construct a new LinearRing from a WKB buffer.
+    ///
+    /// This will parse the number of points and validate the buffer length.
     pub fn try_new(
         buf: &'a [u8],
         byte_order: Endianness,
@@ -101,8 +110,25 @@ impl<'a> LinearRing<'a> {
         self.offset + 4 + (self.dim.size() as u64 * 8 * i)
     }
 
-    pub(crate) fn dimension(&self) -> Dimension {
+    /// The dimension of this LinearRing
+    #[inline]
+    pub fn dimension(&self) -> Dimension {
         self.dim
+    }
+
+    /// The slice of bytes containing the coordinates of this LinearRing. The byte order
+    /// of LinearRing can be obtained by calling [LinearRing::byte_order].
+    #[inline]
+    pub fn coords_slice(&self) -> &'a [u8] {
+        let start = self.coord_offset(0) as usize;
+        let end = start + self.dim.size() * 8 * self.num_points;
+        &self.buf[start..end]
+    }
+
+    /// Get the byte order of WKB LinearRing
+    #[inline]
+    pub fn byte_order(&self) -> Endianness {
+        self.byte_order
     }
 }
 

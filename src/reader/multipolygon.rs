@@ -82,6 +82,7 @@ impl<'a> MultiPolygon<'a> {
             .fold(header, |acc, x| acc + x.size())
     }
 
+    /// The dimension of this MultiPolygon
     pub fn dimension(&self) -> Dimension {
         self.dim
     }

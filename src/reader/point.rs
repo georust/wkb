@@ -88,8 +88,29 @@ impl<'a> Point<'a> {
         header + (self.dim.size() as u64 * 8)
     }
 
+    /// The dimension of this Point
+    #[inline]
     pub fn dimension(&self) -> Dimension {
         self.dim
+    }
+
+    /// Whether this Point is empty
+    #[inline]
+    pub fn is_empty(&self) -> bool {
+        self.is_empty
+    }
+
+    /// Get the byte order of WKB point
+    #[inline]
+    pub fn byte_order(&self) -> Endianness {
+        self.coord.byte_order()
+    }
+
+    /// Get the slice of bytes containing the coordinate. The byte order
+    /// of coordinate can be obtained by calling [Point::byte_order].
+    #[inline]
+    pub fn coord_slice(&self) -> &'a [u8] {
+        self.coord.coord_slice()
     }
 }
 

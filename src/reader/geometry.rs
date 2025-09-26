@@ -20,7 +20,10 @@ use geo_traits::{
 ///
 /// The contained [dimension][geo_traits::Dimensions] will never be `Unknown`.
 #[derive(Debug, Clone)]
-pub struct Wkb<'a>(WkbInner<'a>);
+pub struct Wkb<'a> {
+    buf: &'a [u8],
+    inner: WkbInner<'a>,
+}
 
 impl<'a> Wkb<'a> {
     /// Parse a WKB byte slice into a geometry.
@@ -38,13 +41,13 @@ impl<'a> Wkb<'a> {
     /// newly-allocated `f64`.
     pub fn try_new(buf: &'a [u8]) -> WkbResult<Self> {
         let inner = WkbInner::try_new(buf)?;
-        Ok(Self(inner))
+        Ok(Self { buf, inner })
     }
 
     /// Return the [Dimension] of this geometry.
     pub fn dimension(&self) -> Dimension {
         use WkbInner::*;
-        match &self.0 {
+        match &self.inner {
             Point(g) => g.dimension(),
             LineString(g) => g.dimension(),
             Polygon(g) => g.dimension(),
@@ -58,7 +61,7 @@ impl<'a> Wkb<'a> {
     /// Return the [GeometryType] of this geometry.
     pub fn geometry_type(&self) -> GeometryType {
         use WkbInner::*;
-        match &self.0 {
+        match &self.inner {
             Point(_) => GeometryType::Point,
             LineString(_) => GeometryType::LineString,
             Polygon(_) => GeometryType::Polygon,
@@ -69,9 +72,15 @@ impl<'a> Wkb<'a> {
         }
     }
 
+    /// Return the underlying buffer of this WKB geometry.
+    #[inline]
+    pub fn buf(&self) -> &'a [u8] {
+        self.buf
+    }
+
     pub(crate) fn size(&self) -> u64 {
         use WkbInner::*;
-        match &self.0 {
+        match &self.inner {
             Point(g) => g.size(),
             LineString(g) => g.size(),
             Polygon(g) => g.size(),
@@ -189,7 +198,7 @@ impl<'a> GeometryTrait for Wkb<'a> {
     > {
         use geo_traits::GeometryType as B;
         use WkbInner as A;
-        match &self.0 {
+        match &self.inner {
             A::Point(p) => B::Point(p),
             A::LineString(ls) => B::LineString(ls),
             A::Polygon(ls) => B::Polygon(ls),
@@ -265,7 +274,7 @@ impl<'a> GeometryTrait for &Wkb<'a> {
     > {
         use geo_traits::GeometryType as B;
         use WkbInner as A;
-        match &self.0 {
+        match &self.inner {
             A::Point(p) => B::Point(p),
             A::LineString(ls) => B::LineString(ls),
             A::Polygon(ls) => B::Polygon(ls),

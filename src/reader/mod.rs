@@ -16,14 +16,16 @@ mod polygon;
 mod util;
 
 pub use crate::common::Dimension;
+pub use coord::Coord;
 pub use geometry::Wkb;
-use geometry_collection::GeometryCollection;
-use linestring::LineString;
-use multilinestring::MultiLineString;
-use multipoint::MultiPoint;
-use multipolygon::MultiPolygon;
-use point::Point;
-use polygon::Polygon;
+pub use geometry_collection::GeometryCollection;
+pub use linearring::LinearRing;
+pub use linestring::LineString;
+pub use multilinestring::MultiLineString;
+pub use multipoint::MultiPoint;
+pub use multipolygon::MultiPolygon;
+pub use point::Point;
+pub use polygon::Polygon;
 
 use crate::error::WkbResult;
 

@@ -97,6 +97,7 @@ impl<'a> MultiPoint<'a> {
         header + ((1 + 4 + (self.dim.size() as u64 * 8)) * i)
     }
 
+    /// The dimension of this MultiPoint
     pub fn dimension(&self) -> Dimension {
         self.dim
     }

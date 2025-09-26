@@ -200,7 +200,7 @@ impl From<WkbType> for u32 {
 }
 
 /// Endianness
-#[derive(Debug, Clone, Copy, Default, TryFromPrimitive, IntoPrimitive)]
+#[derive(Debug, Clone, Copy, Default, TryFromPrimitive, IntoPrimitive, PartialEq)]
 #[repr(u8)]
 pub enum Endianness {
     /// Big endian
