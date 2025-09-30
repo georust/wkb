@@ -20,7 +20,14 @@ pub struct GeometryCollection<'a> {
 }
 
 impl<'a> GeometryCollection<'a> {
-    pub fn try_new(buf: &'a [u8], byte_order: Endianness, dim: Dimension) -> WkbResult<Self> {
+    /// Construct a new GeometryCollection from a WKB buffer.
+    ///
+    /// This will parse the WKB header and extract all contained geometries.
+    pub(crate) fn try_new(
+        buf: &'a [u8],
+        byte_order: Endianness,
+        dim: Dimension,
+    ) -> WkbResult<Self> {
         let mut offset = 0;
         let has_srid = has_srid(buf, byte_order, offset)?;
         if has_srid {
@@ -56,10 +63,14 @@ impl<'a> GeometryCollection<'a> {
         })
     }
 
+    /// The dimension of this GeometryCollection
     pub fn dimension(&self) -> Dimension {
         self.dim
     }
 
+    /// The number of bytes in this object, including any header
+    ///
+    /// Note that this is not the same as the length of the underlying buffer
     pub fn size(&self) -> u64 {
         // - 1: byteOrder
         // - 4: wkbType

@@ -21,11 +21,6 @@ pub struct MultiLineString<'a> {
 }
 
 impl<'a> MultiLineString<'a> {
-    #[allow(dead_code)]
-    pub(crate) fn new(buf: &'a [u8], byte_order: Endianness, dim: Dimension) -> Self {
-        Self::try_new(buf, byte_order, dim).unwrap()
-    }
-
     pub(crate) fn try_new(
         buf: &'a [u8],
         byte_order: Endianness,
@@ -83,6 +78,7 @@ impl<'a> MultiLineString<'a> {
             .fold(header, |acc, ls| acc + ls.size())
     }
 
+    /// The dimension of this MultiLineString
     pub fn dimension(&self) -> Dimension {
         self.dim
     }

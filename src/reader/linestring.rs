@@ -28,11 +28,10 @@ pub struct LineString<'a> {
 }
 
 impl<'a> LineString<'a> {
-    pub fn new(buf: &'a [u8], byte_order: Endianness, offset: u64, dim: Dimension) -> Self {
-        Self::try_new(buf, byte_order, offset, dim).unwrap()
-    }
-
-    pub fn try_new(
+    /// Construct a new LineString from a WKB buffer.
+    ///
+    /// This will parse the WKB header and validate the buffer length.
+    pub(crate) fn try_new(
         buf: &'a [u8],
         byte_order: Endianness,
         mut offset: u64,
@@ -103,8 +102,25 @@ impl<'a> LineString<'a> {
         self.offset + 1 + 4 + 4 + (self.dim.size() as u64 * 8 * i)
     }
 
+    /// The dimension of this LineString
+    #[inline]
     pub fn dimension(&self) -> Dimension {
         self.dim
+    }
+
+    /// The slice of bytes containing the coordinates of this LineString. The byte order
+    /// of LineString can be obtained by calling [LineString::byte_order].
+    #[inline]
+    pub fn coords_slice(&self) -> &'a [u8] {
+        let start = self.coord_offset(0) as usize;
+        let end = start + self.dim.size() * 8 * self.num_points;
+        &self.buf[start..end]
+    }
+
+    /// Get the byte order of WKB LineString
+    #[inline]
+    pub fn byte_order(&self) -> Endianness {
+        self.byte_order
     }
 }
 
@@ -114,10 +130,12 @@ impl<'a> LineStringTrait for LineString<'a> {
     where
         Self: 'b;
 
+    #[inline]
     fn num_coords(&self) -> usize {
         self.num_points
     }
 
+    #[inline]
     unsafe fn coord_unchecked(&self, i: usize) -> Self::CoordType<'_> {
         Coord::new(
             self.buf,
@@ -134,10 +152,12 @@ impl<'a> LineStringTrait for &LineString<'a> {
     where
         Self: 'b;
 
+    #[inline]
     fn num_coords(&self) -> usize {
         self.num_points
     }
 
+    #[inline]
     unsafe fn coord_unchecked(&self, i: usize) -> Self::CoordType<'_> {
         Coord::new(
             self.buf,

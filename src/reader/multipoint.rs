@@ -22,11 +22,6 @@ pub struct MultiPoint<'a> {
 }
 
 impl<'a> MultiPoint<'a> {
-    #[allow(dead_code)]
-    pub(crate) fn new(buf: &'a [u8], byte_order: Endianness, dim: Dimension) -> Self {
-        Self::try_new(buf, byte_order, dim).unwrap()
-    }
-
     pub(crate) fn try_new(
         buf: &'a [u8],
         byte_order: Endianness,
@@ -97,6 +92,7 @@ impl<'a> MultiPoint<'a> {
         header + ((1 + 4 + (self.dim.size() as u64 * 8)) * i)
     }
 
+    /// The dimension of this MultiPoint
     pub fn dimension(&self) -> Dimension {
         self.dim
     }

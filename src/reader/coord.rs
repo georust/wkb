@@ -66,6 +66,27 @@ impl<'a> Coord<'a> {
         reader.read_f64(self.byte_order).unwrap()
     }
 
+    /// Get the byte order of WKB coordinate
+    #[inline]
+    pub fn byte_order(&self) -> Endianness {
+        self.byte_order
+    }
+
+    /// Get the slice of bytes containing the coordinate. The byte order
+    /// of coordinate can be obtained by calling [Coord::byte_order].
+    #[inline]
+    pub fn coord_slice(&self) -> &'a [u8] {
+        let start = self.offset as usize;
+        let end = start + self.size() as usize;
+        &self.buf[start..end]
+    }
+
+    /// Get the dimension of this coordinate
+    #[inline]
+    pub fn dimension(&self) -> Dimension {
+        self.dim
+    }
+
     /// The number of bytes in this object
     ///
     /// Note that this is not the same as the length of the underlying buffer
