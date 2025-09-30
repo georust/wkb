@@ -23,7 +23,11 @@ impl<'a> GeometryCollection<'a> {
     /// Construct a new GeometryCollection from a WKB buffer.
     ///
     /// This will parse the WKB header and extract all contained geometries.
-    pub fn try_new(buf: &'a [u8], byte_order: Endianness, dim: Dimension) -> WkbResult<Self> {
+    pub(crate) fn try_new(
+        buf: &'a [u8],
+        byte_order: Endianness,
+        dim: Dimension,
+    ) -> WkbResult<Self> {
         let mut offset = 0;
         let has_srid = has_srid(buf, byte_order, offset)?;
         if has_srid {

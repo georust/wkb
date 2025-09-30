@@ -42,18 +42,8 @@ pub struct LinearRing<'a> {
 impl<'a> LinearRing<'a> {
     /// Construct a new LinearRing from a WKB buffer.
     ///
-    /// # Panics
-    ///
-    /// This will panic if the WKB buffer is invalid. For fallible parsing, use
-    /// [`try_new`](Self::try_new) instead.
-    pub fn new(buf: &'a [u8], byte_order: Endianness, offset: u64, dim: Dimension) -> Self {
-        Self::try_new(buf, byte_order, offset, dim).unwrap()
-    }
-
-    /// Construct a new LinearRing from a WKB buffer.
-    ///
     /// This will parse the number of points and validate the buffer length.
-    pub fn try_new(
+    pub(crate) fn try_new(
         buf: &'a [u8],
         byte_order: Endianness,
         offset: u64,

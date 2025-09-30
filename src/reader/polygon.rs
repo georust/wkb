@@ -23,18 +23,8 @@ pub struct Polygon<'a> {
 impl<'a> Polygon<'a> {
     /// Construct a new Polygon from a WKB buffer.
     ///
-    /// # Panics
-    ///
-    /// This will panic if the WKB buffer is invalid. For fallible parsing, use
-    /// [`try_new`](Self::try_new) instead.
-    pub fn new(buf: &'a [u8], byte_order: Endianness, offset: u64, dim: Dimension) -> Self {
-        Self::try_new(buf, byte_order, offset, dim).unwrap()
-    }
-
-    /// Construct a new Polygon from a WKB buffer.
-    ///
     /// This will parse the WKB header and extract all linear rings.
-    pub fn try_new(
+    pub(crate) fn try_new(
         buf: &'a [u8],
         byte_order: Endianness,
         mut offset: u64,
