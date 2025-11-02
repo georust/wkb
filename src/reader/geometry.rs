@@ -75,7 +75,11 @@ impl<'a> Wkb<'a> {
     /// Return the underlying buffer of this WKB geometry.
     #[inline]
     pub fn buf(&self) -> &'a [u8] {
-        self.buf
+        // Since the other functionalities works without any problem, the
+        // constructors (especially GeometryCollection::try_new())
+        // doesn't specify the end index, so we need to do it here.
+        let end = self.size() as usize;
+        &self.buf[..end]
     }
 
     pub(crate) fn size(&self) -> u64 {
