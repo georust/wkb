@@ -14,26 +14,25 @@ use geo_traits::{CoordTrait, PointTrait};
 pub struct Point<'a> {
     /// The coordinate inside this Point
     coord: Coord<'a>,
+    buf: &'a [u8],
     dim: Dimension,
     is_empty: bool,
-    has_srid: bool,
 }
 
 impl<'a> Point<'a> {
-    pub(crate) fn new(buf: &'a [u8], byte_order: Endianness, offset: u64, dim: Dimension) -> Self {
-        Self::try_new(buf, byte_order, offset, dim).unwrap()
+    pub(crate) fn new(buf: &'a [u8], byte_order: Endianness, dim: Dimension) -> Self {
+        Self::try_new(buf, byte_order, dim).unwrap()
     }
 
     pub(crate) fn try_new(
         buf: &'a [u8],
         byte_order: Endianness,
-        offset: u64,
         dim: Dimension,
     ) -> WkbResult<Self> {
-        let has_srid = has_srid(buf, byte_order, offset)?;
+        let has_srid = has_srid(buf, byte_order)?;
 
         // The space of the byte order + geometry type
-        let mut offset = offset + 5;
+        let mut offset = 5;
         if has_srid {
             // Skip SRID bytes if they exist
             offset += 4;
@@ -41,10 +40,10 @@ impl<'a> Point<'a> {
 
         let expected_end = offset as usize + dim.size() * 8;
         if buf.len() < expected_end {
-            return Self::handle_invalid_buffer_length(offset, expected_end, buf.len());
+            return Self::handle_invalid_buffer_length(expected_end, buf.len());
         }
 
-        let coord = Coord::new(buf, byte_order, offset, dim);
+        let coord = Coord::new(&buf[offset as usize..expected_end], byte_order, dim);
         let is_empty = (0..coord.dim().size()).all(|coord_dim| {
             {
                 // Safety:
@@ -56,36 +55,24 @@ impl<'a> Point<'a> {
         });
         Ok(Self {
             coord,
+            buf: &buf[0..expected_end],
             dim,
             is_empty,
-            has_srid,
         })
     }
 
     #[cold]
-    fn handle_invalid_buffer_length(
-        offset: u64,
-        expected_end: usize,
-        buf_len: usize,
-    ) -> WkbResult<Self> {
+    fn handle_invalid_buffer_length(expected_end: usize, buf_len: usize) -> WkbResult<Self> {
         Err(WkbError::General(format!(
-            "Invalid buffer length for Point: geometry starting at offset {} would end at byte {}, but buffer length is {}.",
-            offset, expected_end, buf_len
+            "Invalid buffer length for Point: geometry would end at byte {}, but buffer length is {}.",
+            expected_end, buf_len
         )))
     }
 
     /// The number of bytes in this object, including any header
-    ///
-    /// Note that this is not the same as the length of the underlying buffer
+    #[inline]
     pub fn size(&self) -> u64 {
-        // - 1: byteOrder
-        // - 4: wkbType
-        // - dim size * 8: two f64s
-        let mut header = 1 + 4;
-        if self.has_srid {
-            header += 4;
-        }
-        header + (self.dim.size() as u64 * 8)
+        self.buf.len() as u64
     }
 
     /// The dimension of this Point
@@ -111,6 +98,12 @@ impl<'a> Point<'a> {
     #[inline]
     pub fn coord_slice(&self) -> &'a [u8] {
         self.coord.coord_slice()
+    }
+
+    /// Get the underlying buffer of this Point
+    #[inline]
+    pub fn buf(&self) -> &'a [u8] {
+        self.buf
     }
 }
 

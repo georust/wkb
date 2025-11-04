@@ -23,23 +23,14 @@ pub struct Coord<'a> {
     /// The byte order of this WKB buffer
     byte_order: Endianness,
 
-    /// The offset into the buffer where this coordinate is located
-    ///
-    /// Note that this does not have to be immediately after the WKB header! For a `Point`, the
-    /// `Point` is immediately after the header, but the `Point` also appears in other geometry
-    /// types. I.e. the `LineString` has a header, then the number of points, then a sequence of
-    /// `Point` objects.
-    offset: u64,
-
     dim: Dimension,
 }
 
 impl<'a> Coord<'a> {
-    pub(crate) fn new(buf: &'a [u8], byte_order: Endianness, offset: u64, dim: Dimension) -> Self {
+    pub(crate) fn new(buf: &'a [u8], byte_order: Endianness, dim: Dimension) -> Self {
         Self {
             buf,
             byte_order,
-            offset,
             dim,
         }
     }
@@ -47,14 +38,13 @@ impl<'a> Coord<'a> {
     #[inline]
     fn get_x(&self) -> f64 {
         let mut reader = Cursor::new(self.buf);
-        reader.set_position(self.offset);
         reader.read_f64(self.byte_order).unwrap()
     }
 
     #[inline]
     fn get_y(&self) -> f64 {
         let mut reader = Cursor::new(self.buf);
-        reader.set_position(self.offset + F64_WIDTH);
+        reader.set_position(F64_WIDTH);
         reader.read_f64(self.byte_order).unwrap()
     }
 
@@ -62,7 +52,7 @@ impl<'a> Coord<'a> {
     fn get_nth_unchecked(&self, n: usize) -> f64 {
         debug_assert!(n < self.dim.size());
         let mut reader = Cursor::new(self.buf);
-        reader.set_position(self.offset + (n as u64 * F64_WIDTH));
+        reader.set_position(n as u64 * F64_WIDTH);
         reader.read_f64(self.byte_order).unwrap()
     }
 
@@ -76,9 +66,8 @@ impl<'a> Coord<'a> {
     /// of coordinate can be obtained by calling [Coord::byte_order].
     #[inline]
     pub fn coord_slice(&self) -> &'a [u8] {
-        let start = self.offset as usize;
-        let end = start + self.size() as usize;
-        &self.buf[start..end]
+        let end = self.size() as usize;
+        &self.buf[0..end]
     }
 
     /// Get the dimension of this coordinate
@@ -88,8 +77,7 @@ impl<'a> Coord<'a> {
     }
 
     /// The number of bytes in this object
-    ///
-    /// Note that this is not the same as the length of the underlying buffer
+    #[inline]
     pub fn size(&self) -> u64 {
         // A 2D Coord is just two f64s
         self.dim.size() as u64 * 8

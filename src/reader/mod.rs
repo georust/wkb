@@ -58,3 +58,6 @@ pub enum GeometryType {
     /// A WKB GeometryCollection
     GeometryCollection,
 }
+
+/// skip endianness and wkb type
+const HEADER_BYTES: u64 = 5;

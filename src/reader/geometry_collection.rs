@@ -3,20 +3,17 @@ use std::io::Cursor;
 use crate::common::Dimension;
 use crate::error::{WkbError, WkbResult};
 use crate::reader::util::{has_srid, ReadBytesExt};
-use crate::reader::Wkb;
+use crate::reader::{Wkb, HEADER_BYTES};
 use crate::Endianness;
 use geo_traits::GeometryCollectionTrait;
-
-/// skip endianness and wkb type
-const HEADER_BYTES: u64 = 5;
 
 /// A WKB GeometryCollection
 #[derive(Debug, Clone)]
 pub struct GeometryCollection<'a> {
     /// A WKB object for each of the internal geometries
     geometries: Vec<Wkb<'a>>,
+    buf: &'a [u8],
     dim: Dimension,
-    has_srid: bool,
 }
 
 impl<'a> GeometryCollection<'a> {
@@ -28,26 +25,17 @@ impl<'a> GeometryCollection<'a> {
         byte_order: Endianness,
         dim: Dimension,
     ) -> WkbResult<Self> {
-        let mut offset = 0;
-        let has_srid = has_srid(buf, byte_order, offset)?;
-        if has_srid {
-            offset += 4;
-        }
+        let has_srid = has_srid(buf, byte_order)?;
+        let num_geometries_offset = HEADER_BYTES + if has_srid { 4 } else { 0 };
 
         let mut reader = Cursor::new(buf);
-        reader.set_position(HEADER_BYTES + offset);
+        reader.set_position(num_geometries_offset);
         let num_geometries = reader
             .read_u32(byte_order)?
             .try_into()
             .map_err(|e| WkbError::General(format!("Invalid number of geometries: {}", e)))?;
 
-        // - 1: byteOrder
-        // - 4: wkbType
-        // - 4: numGeometries
-        let mut geometry_offset = 1 + 4 + 4;
-        if has_srid {
-            geometry_offset += 4;
-        }
+        let mut geometry_offset = num_geometries_offset as usize + 4;
 
         let mut geometries = Vec::with_capacity(num_geometries);
         for _ in 0..num_geometries {
@@ -58,8 +46,8 @@ impl<'a> GeometryCollection<'a> {
 
         Ok(Self {
             geometries,
+            buf: &buf[0..geometry_offset],
             dim,
-            has_srid,
         })
     }
 
@@ -69,17 +57,15 @@ impl<'a> GeometryCollection<'a> {
     }
 
     /// The number of bytes in this object, including any header
-    ///
-    /// Note that this is not the same as the length of the underlying buffer
+    #[inline]
     pub fn size(&self) -> u64 {
-        // - 1: byteOrder
-        // - 4: wkbType
-        // - 4: numGeometries
-        let mut header = 1 + 4 + 4;
-        if self.has_srid {
-            header += 4;
-        }
-        self.geometries.iter().fold(header, |acc, x| acc + x.size())
+        self.buf.len() as u64
+    }
+
+    /// Return the underlying buffer of this GeometryCollection.
+    #[inline]
+    pub fn buf(&self) -> &'a [u8] {
+        self.buf
     }
 }
 
