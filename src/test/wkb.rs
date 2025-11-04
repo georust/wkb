@@ -1,5 +1,7 @@
 use geo_traits::to_geo::ToGeoGeometry;
-use geo_traits::{CoordTrait, GeometryTrait, LineStringTrait, PointTrait, PolygonTrait};
+use geo_traits::{
+    CoordTrait, GeometryCollectionTrait, GeometryTrait, LineStringTrait, PointTrait, PolygonTrait,
+};
 use geo_types::Geometry;
 
 use crate::reader::read_wkb;
@@ -254,6 +256,38 @@ fn round_trip_geometry_collection() {
     .unwrap();
     let retour = read_wkb(&buf).unwrap();
     assert_eq!(Geometry::GeometryCollection(orig), retour.to_geometry());
+}
+
+// A `Wkb` might hold buffer more than the corresponding geometry. This test
+// checks if `Wkb::buf()` returns the exact range even in such a case.
+#[test]
+fn wkb_buf_overshoot() {
+    // create a WKB of a GEOMETRYCOLLECTION
+    let geometry_collection = geo_types::GeometryCollection::new_from(vec![
+        Geometry::Point(point_2d()),
+        Geometry::LineString(linestring_2d()),
+    ]);
+    let mut buf_gc = Vec::new();
+    let options = WriteOptions {
+        endianness: Endianness::LittleEndian,
+    };
+    write_geometry_collection(&mut buf_gc, &geometry_collection, &options).unwrap();
+
+    // read it as Wkb and write out the Wkb of the first geometry
+    let wkb_actual: Vec<u8>;
+    if let geo_traits::GeometryType::GeometryCollection(gc) = read_wkb(&buf_gc).unwrap().as_type() {
+        let point = gc.geometries().next().unwrap();
+        wkb_actual = point.buf().to_vec()
+    } else {
+        panic!("Unexpected type!");
+    }
+
+    // create a WKB of the expected result
+    let point = point_2d();
+    let mut wkb_expected = Vec::new();
+    write_point(&mut wkb_expected, &point, &options).unwrap();
+
+    assert_eq!(&wkb_actual, &wkb_expected);
 }
 
 #[test]
