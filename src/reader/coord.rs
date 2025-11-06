@@ -17,7 +17,7 @@ const F64_WIDTH: u64 = 8;
 /// See page 65 of <https://portal.ogc.org/files/?artifact_id=25355>.
 #[derive(Debug, Clone, Copy)]
 pub struct Coord<'a> {
-    /// The underlying WKB buffer
+    /// The underlying WKB buffer. This should only contain the bytes for one coordinate.
     buf: &'a [u8],
 
     /// The byte order of this WKB buffer
@@ -29,7 +29,7 @@ pub struct Coord<'a> {
 impl<'a> Coord<'a> {
     pub(crate) fn new(buf: &'a [u8], byte_order: Endianness, dim: Dimension) -> Self {
         Self {
-            buf,
+            buf: &buf[..dim.size() * F64_WIDTH as usize],
             byte_order,
             dim,
         }
@@ -79,8 +79,7 @@ impl<'a> Coord<'a> {
     /// The number of bytes in this object
     #[inline]
     pub fn size(&self) -> u64 {
-        // A 2D Coord is just two f64s
-        self.dim.size() as u64 * 8
+        self.buf.len() as u64
     }
 }
 
