@@ -25,14 +25,6 @@ pub struct LinearRing<'a> {
     /// The byte order of this WKB buffer
     byte_order: Endianness,
 
-    /// The offset into the buffer where this linear ring is located
-    ///
-    /// Note that this does not have to be immediately after the WKB header! For a `Point`, the
-    /// `Point` is immediately after the header, but the `Point` also appears in other geometry
-    /// types. I.e. the `LineString` has a header, then the number of points, then a sequence of
-    /// `Point` objects.
-    offset: u64,
-
     /// The number of points in this linear ring
     num_points: usize,
 
@@ -46,58 +38,49 @@ impl<'a> LinearRing<'a> {
     pub(crate) fn try_new(
         buf: &'a [u8],
         byte_order: Endianness,
-        offset: u64,
         dim: Dimension,
     ) -> WkbResult<Self> {
         let mut reader = Cursor::new(buf);
-        reader.set_position(offset);
         let num_points = reader
             .read_u32(byte_order)?
             .try_into()
             .map_err(|e| WkbError::General(format!("Invalid number of points: {}", e)))?;
 
-        let ring = Self {
+        let mut ring = Self {
             buf,
             byte_order,
-            offset,
             num_points,
             dim,
         };
 
-        // `offset` is the start of the num_points field. `ring.size()` is `4 (for num_points) + coord_data`.
-        let expected_end_abs = offset + ring.size();
+        let expected_end_abs = ring.coord_offset(num_points as u64);
         if expected_end_abs > buf.len() as u64 {
-            return Self::handle_invalid_buffer_length(offset, expected_end_abs, buf.len());
+            return Self::handle_invalid_buffer_length(expected_end_abs, buf.len());
         }
+
+        ring.buf = &ring.buf[0..expected_end_abs as usize];
 
         Ok(ring)
     }
 
     #[cold]
-    fn handle_invalid_buffer_length(
-        offset: u64,
-        expected_end_abs: u64,
-        buf_len: usize,
-    ) -> WkbResult<Self> {
+    fn handle_invalid_buffer_length(expected_end_abs: u64, buf_len: usize) -> WkbResult<Self> {
         Err(WkbError::General(format!(
-            "Invalid buffer length for LinearRing: data starting at offset {} would end at byte {}, but buffer length is {}.",
-            offset, expected_end_abs, buf_len
+            "Invalid buffer length for LinearRing: data would end at byte {}, but buffer length is {}.",
+            expected_end_abs, buf_len
         )))
     }
 
     /// The number of bytes in this object, including any header
-    ///
-    /// Note that this is not the same as the length of the underlying buffer
+    #[inline]
     pub fn size(&self) -> u64 {
-        // - 4: numPoints
-        // - 2 * 8 * self.num_points: two f64s for each coordinate
-        4 + (self.dim.size() as u64 * 8 * self.num_points as u64)
+        self.buf.len() as u64
     }
 
     /// The offset into this buffer of any given coordinate
     #[inline]
     pub fn coord_offset(&self, i: u64) -> u64 {
-        self.offset + 4 + (self.dim.size() as u64 * 8 * i)
+        4 + (self.dim.size() as u64 * 8 * i)
     }
 
     /// The dimension of this LinearRing
@@ -111,7 +94,7 @@ impl<'a> LinearRing<'a> {
     #[inline]
     pub fn coords_slice(&self) -> &'a [u8] {
         let start = self.coord_offset(0) as usize;
-        let end = start + self.dim.size() * 8 * self.num_points;
+        let end = self.coord_offset(self.num_points as u64) as usize;
         &self.buf[start..end]
     }
 
@@ -135,12 +118,8 @@ impl<'a> LineStringTrait for LinearRing<'a> {
 
     #[inline]
     unsafe fn coord_unchecked(&self, i: usize) -> Self::CoordType<'_> {
-        Coord::new(
-            self.buf,
-            self.byte_order,
-            self.coord_offset(i as u64),
-            self.dim,
-        )
+        let offset = self.coord_offset(i as u64);
+        Coord::new(&self.buf[offset as usize..], self.byte_order, self.dim)
     }
 }
 
@@ -157,12 +136,8 @@ impl<'a> LineStringTrait for &LinearRing<'a> {
 
     #[inline]
     unsafe fn coord_unchecked(&self, i: usize) -> Self::CoordType<'_> {
-        Coord::new(
-            self.buf,
-            self.byte_order,
-            self.coord_offset(i as u64),
-            self.dim,
-        )
+        let offset = self.coord_offset(i as u64);
+        Coord::new(&self.buf[offset as usize..], self.byte_order, self.dim)
     }
 }
 

@@ -149,3 +149,62 @@ fn read_geometry_collection() {
         retour.to_geometry()
     );
 }
+
+fn test_ewkb_buf_with_trailing_data(g: &Geometry) {
+    let mut geos_geom = geometry_to_geos(g);
+    geos_geom.set_srid(1);
+
+    let mut wkb_writer = WKBWriter::new().unwrap();
+    wkb_writer.set_include_SRID(true);
+    let mut buf: Vec<u8> = wkb_writer.write_wkb(&geos_geom).unwrap().into();
+
+    let original_len = buf.len();
+    buf.extend_from_slice(&[0xFF, 0xFF, 0xFF, 0xFF]);
+
+    let wkb = read_wkb(&buf).unwrap();
+    let trimmed_buf = wkb.buf();
+    assert_eq!(trimmed_buf.len(), original_len);
+
+    let wkb2 = read_wkb(trimmed_buf).unwrap();
+    assert_eq!(*g, wkb2.to_geometry());
+}
+
+#[test]
+fn ewkb_point_buf_with_trailing_data() {
+    test_ewkb_buf_with_trailing_data(&Geometry::Point(point_2d()));
+}
+
+#[test]
+fn ewkb_line_string_buf_with_trailing_data() {
+    test_ewkb_buf_with_trailing_data(&Geometry::LineString(linestring_2d()));
+}
+
+#[test]
+fn ewkb_polygon_buf_with_trailing_data() {
+    test_ewkb_buf_with_trailing_data(&Geometry::Polygon(polygon_2d()));
+}
+
+#[test]
+fn ewkb_polygon_with_interior_buf_with_trailing_data() {
+    test_ewkb_buf_with_trailing_data(&Geometry::Polygon(polygon_2d_with_interior()));
+}
+
+#[test]
+fn ewkb_multi_point_buf_with_trailing_data() {
+    test_ewkb_buf_with_trailing_data(&Geometry::MultiPoint(multi_point_2d()));
+}
+
+#[test]
+fn ewkb_multi_line_string_buf_with_trailing_data() {
+    test_ewkb_buf_with_trailing_data(&Geometry::MultiLineString(multi_line_string_2d()));
+}
+
+#[test]
+fn ewkb_multi_polygon_buf_with_trailing_data() {
+    test_ewkb_buf_with_trailing_data(&Geometry::MultiPolygon(multi_polygon_2d()));
+}
+
+#[test]
+fn ewkb_geometry_collection_buf_with_trailing_data() {
+    test_ewkb_buf_with_trailing_data(&Geometry::GeometryCollection(geometry_collection_2d()));
+}

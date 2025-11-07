@@ -2,7 +2,7 @@
 
 ## Unreleased
 
-- Expose APIs for accessing the underlying WKB buffer. (#85)
+- Expose APIs for accessing the underlying WKB buffer. (#85, #88)
 - Making structs for individual geometry types public. (#85)
 
 ## 0.9.1 - 2025-09-24

@@ -4,10 +4,9 @@ use crate::common::Dimension;
 use crate::error::{WkbError, WkbResult};
 use crate::reader::linestring::LineString;
 use crate::reader::util::{has_srid, ReadBytesExt};
+use crate::reader::HEADER_BYTES;
 use crate::Endianness;
 use geo_traits::MultiLineStringTrait;
-
-const HEADER_BYTES: u64 = 5;
 
 /// A WKB MultiLineString
 ///
@@ -16,8 +15,8 @@ const HEADER_BYTES: u64 = 5;
 pub struct MultiLineString<'a> {
     /// A LineString object for each of the internal line strings
     wkb_line_strings: Vec<LineString<'a>>,
+    buf: &'a [u8],
     dim: Dimension,
-    has_srid: bool,
 }
 
 impl<'a> MultiLineString<'a> {
@@ -26,61 +25,47 @@ impl<'a> MultiLineString<'a> {
         byte_order: Endianness,
         dim: Dimension,
     ) -> WkbResult<Self> {
-        let mut offset = 0;
-        let has_srid = has_srid(buf, byte_order, offset)?;
-        if has_srid {
-            offset += 4;
-        }
+        let has_srid = has_srid(buf, byte_order)?;
+        let num_line_strings_offset = HEADER_BYTES + if has_srid { 4 } else { 0 };
 
         let mut reader = Cursor::new(buf);
-        reader.set_position(HEADER_BYTES + offset);
+        reader.set_position(num_line_strings_offset);
         let num_line_strings = reader
             .read_u32(byte_order)?
             .try_into()
             .map_err(|e| WkbError::General(format!("Invalid number of line strings: {}", e)))?;
 
-        // - 1: byteOrder
-        // - 4: wkbType
-        // - 4: numLineStrings
-        let mut line_string_offset = 1 + 4 + 4;
-        if has_srid {
-            line_string_offset += 4;
-        }
+        let mut line_string_offset = num_line_strings_offset + 4;
 
         let mut wkb_line_strings = Vec::with_capacity(num_line_strings);
         for _ in 0..num_line_strings {
-            let ls = LineString::try_new(buf, byte_order, line_string_offset, dim)?;
-            wkb_line_strings.push(ls);
+            let ls = LineString::try_new(&buf[line_string_offset as usize..], byte_order, dim)?;
             line_string_offset += ls.size();
+            wkb_line_strings.push(ls);
         }
 
         Ok(Self {
             wkb_line_strings,
+            buf: &buf[0..line_string_offset as usize],
             dim,
-            has_srid,
         })
     }
 
     /// The number of bytes in this object, including any header
-    ///
-    /// Note that this is not the same as the length of the underlying buffer
+    #[inline]
     pub fn size(&self) -> u64 {
-        // - 1: byteOrder
-        // - 4: wkbType
-        // - 4: numPoints
-        // - Point::size() * self.num_points: the size of each Point for each point
-        let mut header = 1 + 4 + 4;
-        if self.has_srid {
-            header += 4;
-        }
-        self.wkb_line_strings
-            .iter()
-            .fold(header, |acc, ls| acc + ls.size())
+        self.buf.len() as u64
     }
 
     /// The dimension of this MultiLineString
     pub fn dimension(&self) -> Dimension {
         self.dim
+    }
+
+    /// Get the underlying buffer of this MultiLineString
+    #[inline]
+    pub fn buf(&self) -> &'a [u8] {
+        self.buf
     }
 }
 

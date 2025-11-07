@@ -4,11 +4,9 @@ use crate::common::Dimension;
 use crate::error::{WkbError, WkbResult};
 use crate::reader::linearring::LinearRing;
 use crate::reader::util::{has_srid, ReadBytesExt};
+use crate::reader::HEADER_BYTES;
 use crate::Endianness;
 use geo_traits::PolygonTrait;
-
-/// skip endianness and wkb type
-const HEADER_BYTES: u64 = 5;
 
 /// A WKB Polygon
 ///
@@ -16,8 +14,8 @@ const HEADER_BYTES: u64 = 5;
 #[derive(Debug, Clone)]
 pub struct Polygon<'a> {
     wkb_linear_rings: Vec<LinearRing<'a>>,
+    buf: &'a [u8],
     dim: Dimension,
-    has_srid: bool,
 }
 
 impl<'a> Polygon<'a> {
@@ -27,62 +25,49 @@ impl<'a> Polygon<'a> {
     pub(crate) fn try_new(
         buf: &'a [u8],
         byte_order: Endianness,
-        mut offset: u64,
         dim: Dimension,
     ) -> WkbResult<Self> {
-        let has_srid = has_srid(buf, byte_order, offset)?;
-        if has_srid {
-            offset += 4;
-        }
+        let has_srid = has_srid(buf, byte_order)?;
+        let num_rings_offset = HEADER_BYTES + if has_srid { 4 } else { 0 };
 
         let mut reader = Cursor::new(buf);
-        reader.set_position(HEADER_BYTES + offset);
+        reader.set_position(num_rings_offset);
 
         let num_rings = reader
             .read_u32(byte_order)?
             .try_into()
             .map_err(|e| WkbError::General(format!("Invalid number of rings: {}", e)))?;
 
-        // - existing offset into buffer
-        // - 1: byteOrder
-        // - 4: wkbType
-        // - 4: numLineStrings
-        let mut ring_offset = offset + 1 + 4 + 4;
+        let mut ring_offset = num_rings_offset + 4;
         let mut wkb_linear_rings = Vec::with_capacity(num_rings);
         for _ in 0..num_rings {
-            let polygon = LinearRing::try_new(buf, byte_order, ring_offset, dim)?;
-            wkb_linear_rings.push(polygon);
-            ring_offset += polygon.size();
+            let ring = LinearRing::try_new(&buf[ring_offset as usize..], byte_order, dim)?;
+            ring_offset += ring.size();
+            wkb_linear_rings.push(ring);
         }
 
         Ok(Self {
             wkb_linear_rings,
+            buf: &buf[0..ring_offset as usize],
             dim,
-            has_srid,
         })
     }
 
     /// The number of bytes in this object, including any header
-    ///
-    /// Note that this is not the same as the length of the underlying buffer
+    #[inline]
     pub fn size(&self) -> u64 {
-        // - 1: byteOrder
-        // - 4: wkbType
-        // - 4: numPoints
-        // - size of each linear ring
-        let mut header = 1 + 4 + 4;
-        if self.has_srid {
-            header += 4;
-        }
-
-        self.wkb_linear_rings
-            .iter()
-            .fold(header, |acc, ring| acc + ring.size())
+        self.buf.len() as u64
     }
 
     /// The dimension of this Polygon
     pub fn dimension(&self) -> Dimension {
         self.dim
+    }
+
+    /// Get the underlying buffer of this Polygon
+    #[inline]
+    pub fn buf(&self) -> &'a [u8] {
+        self.buf
     }
 }
 

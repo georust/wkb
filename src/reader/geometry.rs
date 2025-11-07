@@ -21,7 +21,6 @@ use geo_traits::{
 /// The contained [dimension][geo_traits::Dimensions] will never be `Unknown`.
 #[derive(Debug, Clone)]
 pub struct Wkb<'a> {
-    buf: &'a [u8],
     inner: WkbInner<'a>,
 }
 
@@ -41,7 +40,7 @@ impl<'a> Wkb<'a> {
     /// newly-allocated `f64`.
     pub fn try_new(buf: &'a [u8]) -> WkbResult<Self> {
         let inner = WkbInner::try_new(buf)?;
-        Ok(Self { buf, inner })
+        Ok(Self { inner })
     }
 
     /// Return the [Dimension] of this geometry.
@@ -72,10 +71,22 @@ impl<'a> Wkb<'a> {
         }
     }
 
-    /// Return the underlying buffer of this WKB geometry.
+    /// Return the underlying WKB buffer for this geometry.
+    ///
+    /// The buffer is sliced to contain only this geometry's WKB representation.
+    /// Any trailing bytes are excluded.
     #[inline]
     pub fn buf(&self) -> &'a [u8] {
-        self.buf
+        use WkbInner::*;
+        match &self.inner {
+            Point(g) => g.buf(),
+            LineString(g) => g.buf(),
+            Polygon(g) => g.buf(),
+            MultiPoint(g) => g.buf(),
+            MultiLineString(g) => g.buf(),
+            MultiPolygon(g) => g.buf(),
+            GeometryCollection(g) => g.buf(),
+        }
     }
 
     pub(crate) fn size(&self) -> u64 {
@@ -112,11 +123,11 @@ impl<'a> WkbInner<'a> {
         let wkb_type = WkbType::from_buffer(buf)?;
 
         let out = match wkb_type {
-            WkbType::Point(dim) => Self::Point(Point::try_new(buf, byte_order, 0, dim)?),
+            WkbType::Point(dim) => Self::Point(Point::try_new(buf, byte_order, dim)?),
             WkbType::LineString(dim) => {
-                Self::LineString(LineString::try_new(buf, byte_order, 0, dim)?)
+                Self::LineString(LineString::try_new(buf, byte_order, dim)?)
             }
-            WkbType::Polygon(dim) => Self::Polygon(Polygon::try_new(buf, byte_order, 0, dim)?),
+            WkbType::Polygon(dim) => Self::Polygon(Polygon::try_new(buf, byte_order, dim)?),
             WkbType::MultiPoint(dim) => {
                 Self::MultiPoint(MultiPoint::try_new(buf, byte_order, dim)?)
             }

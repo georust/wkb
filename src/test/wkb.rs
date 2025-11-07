@@ -4,8 +4,8 @@ use geo_types::Geometry;
 
 use crate::reader::read_wkb;
 use crate::writer::{
-    write_geometry_collection, write_line_string, write_multi_line_string, write_multi_point,
-    write_multi_polygon, write_point, write_polygon, WriteOptions,
+    write_geometry, write_geometry_collection, write_line_string, write_multi_line_string,
+    write_multi_point, write_multi_polygon, write_point, write_polygon, WriteOptions,
 };
 use crate::Endianness;
 
@@ -257,7 +257,7 @@ fn round_trip_geometry_collection() {
 }
 
 #[test]
-fn wkb_point_coord_slice() {
+fn wkb_point_coord() {
     let p = point_2d();
     let mut buf = Vec::new();
     write_point(
@@ -277,10 +277,13 @@ fn wkb_point_coord_slice() {
     let y = f64::from_le_bytes(coord_slice[8..16].try_into().unwrap());
     assert_eq!(x, 0.0);
     assert_eq!(y, 1.0);
+    let coord = point.coord().unwrap();
+    assert_eq!(coord.x(), x);
+    assert_eq!(coord.y(), y);
 }
 
 #[test]
-fn wkb_linestring_coords_slice() {
+fn wkb_linestring_coords() {
     let ls = linestring_2d();
     let mut buf = Vec::new();
     write_line_string(
@@ -305,10 +308,16 @@ fn wkb_linestring_coords_slice() {
     assert_eq!(y0, 1.0);
     assert_eq!(x1, 1.0);
     assert_eq!(y1, 2.0);
+    let coord0 = line_string.coord(0).unwrap();
+    let coord1 = line_string.coord(1).unwrap();
+    assert_eq!(coord0.x(), x0);
+    assert_eq!(coord0.y(), y0);
+    assert_eq!(coord1.x(), x1);
+    assert_eq!(coord1.y(), y1);
 }
 
 #[test]
-fn wkb_polygon_coords_slice() {
+fn wkb_polygon_coords() {
     let poly = polygon_2d();
     let mut buf = Vec::new();
     write_polygon(
@@ -329,6 +338,9 @@ fn wkb_polygon_coords_slice() {
     for (k, coord) in exterior.coords().enumerate() {
         let x = f64::from_le_bytes(coord_slice[16 * k..16 * k + 8].try_into().unwrap());
         let y = f64::from_le_bytes(coord_slice[16 * k + 8..16 * k + 16].try_into().unwrap());
+        assert_eq!(x, coord.x());
+        assert_eq!(y, coord.y());
+        let coord = exterior.coord(k).unwrap();
         assert_eq!(x, coord.x());
         assert_eq!(y, coord.y());
     }
@@ -391,4 +403,66 @@ fn wkb_geo_traits_specialized_lifetime() {
     assert!(coord.is_some());
     assert_eq!(coord.unwrap().x(), 1.0);
     assert_eq!(coord.unwrap().y(), 2.0);
+}
+
+fn test_wkb_buf_with_trailing_data(g: &Geometry) {
+    let mut buf: Vec<u8> = Vec::new();
+    write_geometry(
+        &mut buf,
+        g,
+        &WriteOptions {
+            endianness: Endianness::LittleEndian,
+        },
+    )
+    .unwrap();
+
+    let original_len = buf.len();
+    buf.extend_from_slice(&[0xFF, 0xFF, 0xFF, 0xFF]);
+
+    let wkb = read_wkb(&buf).unwrap();
+    let trimmed_buf = wkb.buf();
+    assert_eq!(trimmed_buf.len(), original_len);
+
+    let wkb2 = read_wkb(trimmed_buf).unwrap();
+    assert_eq!(*g, wkb2.to_geometry());
+}
+
+#[test]
+fn wkb_point_buf_with_trailing_data() {
+    test_wkb_buf_with_trailing_data(&Geometry::Point(point_2d()));
+}
+
+#[test]
+fn wkb_linestring_buf_with_trailing_data() {
+    test_wkb_buf_with_trailing_data(&Geometry::LineString(linestring_2d()));
+}
+
+#[test]
+fn wkb_polygon_buf_with_trailing_data() {
+    test_wkb_buf_with_trailing_data(&Geometry::Polygon(polygon_2d()));
+}
+
+#[test]
+fn wkb_polygon_with_interior_buf_with_trailing_data() {
+    test_wkb_buf_with_trailing_data(&Geometry::Polygon(polygon_2d_with_interior()));
+}
+
+#[test]
+fn wkb_multi_point_buf_with_trailing_data() {
+    test_wkb_buf_with_trailing_data(&Geometry::MultiPoint(multi_point_2d()));
+}
+
+#[test]
+fn wkb_multi_line_string_buf_with_trailing_data() {
+    test_wkb_buf_with_trailing_data(&Geometry::MultiLineString(multi_line_string_2d()));
+}
+
+#[test]
+fn wkb_multi_polygon_buf_with_trailing_data() {
+    test_wkb_buf_with_trailing_data(&Geometry::MultiPolygon(multi_polygon_2d()));
+}
+
+#[test]
+fn wkb_geometry_collection_buf_with_trailing_data() {
+    test_wkb_buf_with_trailing_data(&Geometry::GeometryCollection(geometry_collection_2d()));
 }
