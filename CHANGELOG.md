@@ -7,6 +7,7 @@
 - Set up trusted publishing for crates.io (#89)
 - Expose APIs for accessing the underlying WKB buffer. (#85, #88)
 - Making structs for individual geometry types public. (#85)
+- Make hyperlinks in README clickable (#92)
 
 ## 0.9.1 - 2025-09-24
 
