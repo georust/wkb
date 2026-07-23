@@ -3,7 +3,7 @@ use std::io::Cursor;
 use crate::common::Dimension;
 use crate::error::{WkbError, WkbResult};
 use crate::reader::polygon::Polygon;
-use crate::reader::util::{has_srid, ReadBytesExt};
+use crate::reader::util::{bounded_capacity, has_srid, ReadBytesExt, MIN_WKB_GEOMETRY_SIZE};
 use crate::reader::HEADER_BYTES;
 use crate::Endianness;
 use geo_traits::MultiPolygonTrait;
@@ -35,7 +35,12 @@ impl<'a> MultiPolygon<'a> {
 
         let mut polygon_offset = num_polygons_offset + 4;
 
-        let mut wkb_polygons = Vec::with_capacity(num_polygons);
+        let capacity = bounded_capacity(
+            num_polygons,
+            buf.len().saturating_sub(polygon_offset as usize),
+            MIN_WKB_GEOMETRY_SIZE,
+        );
+        let mut wkb_polygons = Vec::with_capacity(capacity);
         for _ in 0..num_polygons {
             let polygon = Polygon::try_new(&buf[polygon_offset as usize..], byte_order, dim)?;
             polygon_offset += polygon.size();

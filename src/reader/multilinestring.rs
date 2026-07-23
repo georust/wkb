@@ -3,7 +3,7 @@ use std::io::Cursor;
 use crate::common::Dimension;
 use crate::error::{WkbError, WkbResult};
 use crate::reader::linestring::LineString;
-use crate::reader::util::{has_srid, ReadBytesExt};
+use crate::reader::util::{bounded_capacity, has_srid, ReadBytesExt, MIN_WKB_GEOMETRY_SIZE};
 use crate::reader::HEADER_BYTES;
 use crate::Endianness;
 use geo_traits::MultiLineStringTrait;
@@ -37,7 +37,12 @@ impl<'a> MultiLineString<'a> {
 
         let mut line_string_offset = num_line_strings_offset + 4;
 
-        let mut wkb_line_strings = Vec::with_capacity(num_line_strings);
+        let capacity = bounded_capacity(
+            num_line_strings,
+            buf.len().saturating_sub(line_string_offset as usize),
+            MIN_WKB_GEOMETRY_SIZE,
+        );
+        let mut wkb_line_strings = Vec::with_capacity(capacity);
         for _ in 0..num_line_strings {
             let ls = LineString::try_new(&buf[line_string_offset as usize..], byte_order, dim)?;
             line_string_offset += ls.size();

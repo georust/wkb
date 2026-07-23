@@ -3,7 +3,7 @@ use std::io::Cursor;
 use crate::common::Dimension;
 use crate::error::{WkbError, WkbResult};
 use crate::reader::linearring::LinearRing;
-use crate::reader::util::{has_srid, ReadBytesExt};
+use crate::reader::util::{bounded_capacity, has_srid, ReadBytesExt, MIN_LINEAR_RING_SIZE};
 use crate::reader::HEADER_BYTES;
 use crate::Endianness;
 use geo_traits::PolygonTrait;
@@ -39,7 +39,12 @@ impl<'a> Polygon<'a> {
             .map_err(|e| WkbError::General(format!("Invalid number of rings: {}", e)))?;
 
         let mut ring_offset = num_rings_offset + 4;
-        let mut wkb_linear_rings = Vec::with_capacity(num_rings);
+        let capacity = bounded_capacity(
+            num_rings,
+            buf.len().saturating_sub(ring_offset as usize),
+            MIN_LINEAR_RING_SIZE,
+        );
+        let mut wkb_linear_rings = Vec::with_capacity(capacity);
         for _ in 0..num_rings {
             let ring = LinearRing::try_new(&buf[ring_offset as usize..], byte_order, dim)?;
             ring_offset += ring.size();

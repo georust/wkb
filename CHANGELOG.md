@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Avoid stack overflow and huge allocations on malformed WKB by capping GeometryCollection nesting depth and bounding collection pre-allocation to the remaining buffer size (#93).
+
 ## 0.9.2 - 2025-11-21
 
 - Set up trusted publishing for crates.io (#89)
