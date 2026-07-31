@@ -1,6 +1,7 @@
 #[cfg(test)]
 mod tests {
-    use crate::reader::Wkb;
+    use crate::error::WkbError;
+    use crate::reader::{Wkb, MAX_WKB_NESTING_DEPTH};
 
     // --- Helper Functions ---
     fn make_wkb_header(type_id: u32, is_little_endian: bool) -> Vec<u8> {
@@ -196,5 +197,78 @@ mod tests {
                                                          // Missing contained geometry's WKB header (e.g., a Point, 5 bytes)
         let result = Wkb::try_new(&wkb_data);
         assert!(result.is_err());
+    }
+
+    // --- Untrusted-input hardening (completes the "don't panic on invalid WKB" work in #74) ---
+
+    fn make_nested_geometry_collections(levels: usize) -> Vec<u8> {
+        // `levels` GeometryCollections each holding a single child, wrapping a terminal Point.
+        let mut buf = Vec::new();
+        for _ in 0..levels {
+            buf.extend(make_wkb_header(7, true)); // GeometryCollection
+            buf.extend_from_slice(&1u32.to_le_bytes()); // one geometry
+        }
+        buf.extend(make_wkb_header(1, true)); // Point
+        buf.extend_from_slice(&0.0f64.to_le_bytes());
+        buf.extend_from_slice(&0.0f64.to_le_bytes());
+        buf
+    }
+
+    #[test]
+    fn test_wkb_moderately_nested_geometry_collection_is_ok() {
+        let wkb_data = make_nested_geometry_collections(50);
+        assert!(Wkb::try_new(&wkb_data).is_ok());
+    }
+
+    #[test]
+    fn test_wkb_nesting_at_depth_limit_is_ok() {
+        let wkb_data = make_nested_geometry_collections(MAX_WKB_NESTING_DEPTH);
+        assert!(Wkb::try_new(&wkb_data).is_ok());
+    }
+
+    #[test]
+    fn test_wkb_nesting_beyond_depth_limit_errs() {
+        let wkb_data = make_nested_geometry_collections(MAX_WKB_NESTING_DEPTH + 1);
+        match Wkb::try_new(&wkb_data) {
+            Err(WkbError::NestingDepthExceeded(limit)) => {
+                assert_eq!(limit, MAX_WKB_NESTING_DEPTH)
+            }
+            other => panic!("expected NestingDepthExceeded, got {:?}", other),
+        }
+    }
+
+    #[test]
+    fn test_wkb_deeply_nested_geometry_collection_returns_err_not_stack_overflow() {
+        // Without a depth limit this recurses until the stack overflows and aborts the process.
+        let wkb_data = make_nested_geometry_collections(1_000);
+        assert!(Wkb::try_new(&wkb_data).is_err());
+    }
+
+    // A header claiming u32::MAX elements must not pre-allocate gigabytes before the (missing)
+    // body is read; it should just fail to read the first element.
+    fn assert_huge_count_errs(type_id: u32) {
+        let mut wkb_data = make_wkb_header(type_id, true);
+        wkb_data.extend_from_slice(&u32::MAX.to_le_bytes());
+        assert!(Wkb::try_new(&wkb_data).is_err());
+    }
+
+    #[test]
+    fn test_wkb_multilinestring_huge_count_does_not_overallocate() {
+        assert_huge_count_errs(5);
+    }
+
+    #[test]
+    fn test_wkb_polygon_huge_ring_count_does_not_overallocate() {
+        assert_huge_count_errs(3);
+    }
+
+    #[test]
+    fn test_wkb_multipolygon_huge_count_does_not_overallocate() {
+        assert_huge_count_errs(6);
+    }
+
+    #[test]
+    fn test_wkb_geometry_collection_huge_count_does_not_overallocate() {
+        assert_huge_count_errs(7);
     }
 }

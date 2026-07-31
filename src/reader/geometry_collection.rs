@@ -2,8 +2,8 @@ use std::io::Cursor;
 
 use crate::common::Dimension;
 use crate::error::{WkbError, WkbResult};
-use crate::reader::util::{has_srid, ReadBytesExt};
-use crate::reader::{Wkb, HEADER_BYTES};
+use crate::reader::util::{bounded_capacity, has_srid, ReadBytesExt, MIN_WKB_GEOMETRY_SIZE};
+use crate::reader::{Wkb, HEADER_BYTES, MAX_WKB_NESTING_DEPTH};
 use crate::Endianness;
 use geo_traits::GeometryCollectionTrait;
 
@@ -24,7 +24,12 @@ impl<'a> GeometryCollection<'a> {
         buf: &'a [u8],
         byte_order: Endianness,
         dim: Dimension,
+        depth: usize,
     ) -> WkbResult<Self> {
+        if depth >= MAX_WKB_NESTING_DEPTH {
+            return Err(WkbError::NestingDepthExceeded(MAX_WKB_NESTING_DEPTH));
+        }
+
         let has_srid = has_srid(buf, byte_order)?;
         let num_geometries_offset = HEADER_BYTES + if has_srid { 4 } else { 0 };
 
@@ -37,9 +42,14 @@ impl<'a> GeometryCollection<'a> {
 
         let mut geometry_offset = num_geometries_offset as usize + 4;
 
-        let mut geometries = Vec::with_capacity(num_geometries);
+        let capacity = bounded_capacity(
+            num_geometries,
+            buf.len().saturating_sub(geometry_offset),
+            MIN_WKB_GEOMETRY_SIZE,
+        );
+        let mut geometries = Vec::with_capacity(capacity);
         for _ in 0..num_geometries {
-            let geometry = Wkb::try_new(&buf[geometry_offset..])?;
+            let geometry = Wkb::try_new_with_depth(&buf[geometry_offset..], depth + 1)?;
             geometry_offset += geometry.size() as usize;
             geometries.push(geometry);
         }

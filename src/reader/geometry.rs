@@ -38,8 +38,18 @@ impl<'a> Wkb<'a> {
     /// access** but **not zero-copy**. This is because the raw WKB buffer is not 8-byte aligned,
     /// so when accessing a coordinate the underlying bytes need to be copied into a
     /// newly-allocated `f64`.
+    ///
+    /// Nesting is bounded by [`crate::reader::MAX_WKB_NESTING_DEPTH`]; deeper
+    /// input fails with [`WkbError::NestingDepthExceeded`] instead of
+    /// overflowing the stack.
     pub fn try_new(buf: &'a [u8]) -> WkbResult<Self> {
-        let inner = WkbInner::try_new(buf)?;
+        Self::try_new_with_depth(buf, 0)
+    }
+
+    /// Like [`Wkb::try_new`], but tracks the current GeometryCollection nesting depth so a
+    /// deeply nested collection can't overflow the stack while recursing.
+    pub(crate) fn try_new_with_depth(buf: &'a [u8], depth: usize) -> WkbResult<Self> {
+        let inner = WkbInner::try_new(buf, depth)?;
         Ok(Self { inner })
     }
 
@@ -116,7 +126,7 @@ pub(crate) enum WkbInner<'a> {
 }
 
 impl<'a> WkbInner<'a> {
-    fn try_new(buf: &'a [u8]) -> WkbResult<Self> {
+    fn try_new(buf: &'a [u8], depth: usize) -> WkbResult<Self> {
         let mut reader = Cursor::new(buf);
         let byte_order = Endianness::try_from(reader.read_u8()?)
             .map_err(|_| WkbError::General("Invalid byte order".to_string()))?;
@@ -138,7 +148,7 @@ impl<'a> WkbInner<'a> {
                 Self::MultiPolygon(MultiPolygon::try_new(buf, byte_order, dim)?)
             }
             WkbType::GeometryCollection(dim) => {
-                Self::GeometryCollection(GeometryCollection::try_new(buf, byte_order, dim)?)
+                Self::GeometryCollection(GeometryCollection::try_new(buf, byte_order, dim, depth)?)
             }
         };
         Ok(out)

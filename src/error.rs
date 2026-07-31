@@ -20,6 +20,10 @@ pub enum WkbError {
     #[error("General error: {0}")]
     General(String),
 
+    /// WKB geometry nesting exceeded the configured recursion limit.
+    #[error("WKB nesting depth exceeds the maximum of {0}")]
+    NestingDepthExceeded(usize),
+
     /// [std::io::Error]
     #[error(transparent)]
     IOError(#[from] std::io::Error),
