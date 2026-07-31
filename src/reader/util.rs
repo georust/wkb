@@ -74,9 +74,6 @@ mod tests {
     fn bounded_capacity_preserves_valid_count() {
         // A valid buffer has room for every declared element, so the count is returned as-is.
         let count = 1000;
-        assert_eq!(
-            bounded_capacity(count, 9000, MIN_WKB_GEOMETRY_SIZE),
-            count
-        );
+        assert_eq!(bounded_capacity(count, 9000, MIN_WKB_GEOMETRY_SIZE), count);
     }
 }
