@@ -9,14 +9,9 @@ mod tests {
     use crate::reader::{Wkb, MAX_WKB_NESTING_DEPTH};
 
     // --- Helper Functions ---
-    fn make_wkb_header(typ: WkbType, is_little_endian: bool) -> Vec<u8> {
-        let type_id = u32::from(typ);
-        let mut header = vec![if is_little_endian { 0x01 } else { 0x00 }];
-        if is_little_endian {
-            header.extend_from_slice(&type_id.to_le_bytes());
-        } else {
-            header.extend_from_slice(&type_id.to_be_bytes());
-        }
+    fn make_wkb_header(typ: WkbType) -> Vec<u8> {
+        let mut header = vec![0x01]; // little endian
+        header.extend_from_slice(&u32::from(typ).to_le_bytes());
         header
     }
 
@@ -38,7 +33,7 @@ mod tests {
     // --- Point WKB Errors ---
     #[test]
     fn test_wkb_point_xy_buffer_too_short_for_coords() {
-        let mut wkb_data = make_wkb_header(Point(Xy), true); // 5 bytes
+        let mut wkb_data = make_wkb_header(Point(Xy)); // 5 bytes
         wkb_data.extend_from_slice(&[0u8; 8]); // Only 8 bytes for coords, need 16
         let result = Wkb::try_new(&wkb_data);
         assert!(result.is_err());
@@ -46,7 +41,7 @@ mod tests {
 
     #[test]
     fn test_wkb_point_xyz_buffer_too_short_for_coords() {
-        let mut wkb_data = make_wkb_header(Point(Xyz), true); // 5 bytes
+        let mut wkb_data = make_wkb_header(Point(Xyz)); // 5 bytes
         wkb_data.extend_from_slice(&[0u8; 16]); // Only 16 bytes for coords, need 24
         let result = Wkb::try_new(&wkb_data);
         assert!(result.is_err());
@@ -56,14 +51,14 @@ mod tests {
     #[test]
     fn test_wkb_linestring_buffer_too_short_for_num_points() {
         // Missing the num_points field (4 bytes)
-        let wkb_data = make_wkb_header(LineString(Xy), true);
+        let wkb_data = make_wkb_header(LineString(Xy));
         let result = Wkb::try_new(&wkb_data);
         assert!(result.is_err());
     }
 
     #[test]
     fn test_wkb_linestring_num_points_too_large_for_buffer() {
-        let mut wkb_data = make_wkb_header(LineString(Xy), true); // 5 bytes
+        let mut wkb_data = make_wkb_header(LineString(Xy)); // 5 bytes
         wkb_data.extend_from_slice(&10u32.to_le_bytes()); // 10 points declared
         wkb_data.extend_from_slice(&1.0f64.to_le_bytes()); // Only 1 point's data (16 bytes)
         wkb_data.extend_from_slice(&2.0f64.to_le_bytes());
@@ -74,7 +69,7 @@ mod tests {
 
     #[test]
     fn test_wkb_linestring_invalid_num_points_value() {
-        let mut wkb_data = make_wkb_header(LineString(Xy), true);
+        let mut wkb_data = make_wkb_header(LineString(Xy));
         // u32::MAX num_points would cause massive size calculation if not for try_into error first
         wkb_data.extend_from_slice(&u32::MAX.to_le_bytes());
         let result = Wkb::try_new(&wkb_data);
@@ -85,14 +80,14 @@ mod tests {
     #[test]
     fn test_wkb_polygon_buffer_too_short_for_num_rings() {
         // Missing the num_rings field (4 bytes)
-        let wkb_data = make_wkb_header(Polygon(Xy), true);
+        let wkb_data = make_wkb_header(Polygon(Xy));
         let result = Wkb::try_new(&wkb_data);
         assert!(result.is_err());
     }
 
     #[test]
     fn test_wkb_polygon_buffer_too_short_for_ring_num_points() {
-        let mut wkb_data = make_wkb_header(Polygon(Xy), true);
+        let mut wkb_data = make_wkb_header(Polygon(Xy));
         // 1 ring, but the ring's num_points (4 bytes) is missing
         wkb_data.extend_from_slice(&1u32.to_le_bytes());
         let result = Wkb::try_new(&wkb_data);
@@ -101,7 +96,7 @@ mod tests {
 
     #[test]
     fn test_wkb_polygon_ring_num_points_too_large_for_buffer() {
-        let mut wkb_data = make_wkb_header(Polygon(Xy), true);
+        let mut wkb_data = make_wkb_header(Polygon(Xy));
         wkb_data.extend_from_slice(&1u32.to_le_bytes());
         // 1 ring declaring 4 points (closed), but only 1 point's worth of data follows
         wkb_data.extend_from_slice(&4u32.to_le_bytes());
@@ -117,14 +112,14 @@ mod tests {
     #[test]
     fn test_wkb_multipoint_buffer_too_short_for_num_multipoints_header() {
         // Missing num_points for the MultiPoint itself (4 bytes)
-        let wkb_data = make_wkb_header(MultiPoint(Xy), true);
+        let wkb_data = make_wkb_header(MultiPoint(Xy));
         let result = Wkb::try_new(&wkb_data);
         assert!(result.is_err());
     }
 
     #[test]
     fn test_wkb_multipoint_buffer_too_short_for_contained_point_header() {
-        let mut wkb_data = make_wkb_header(MultiPoint(Xy), true);
+        let mut wkb_data = make_wkb_header(MultiPoint(Xy));
         // 1 point, but its WKB header (5 bytes: 1 byte order + 4 type) is missing
         wkb_data.extend_from_slice(&1u32.to_le_bytes());
         let result = Wkb::try_new(&wkb_data);
@@ -133,9 +128,9 @@ mod tests {
 
     #[test]
     fn test_wkb_multipoint_buffer_too_short_for_contained_point_coords() {
-        let mut wkb_data = make_wkb_header(MultiPoint(Xy), true);
+        let mut wkb_data = make_wkb_header(MultiPoint(Xy));
         wkb_data.extend_from_slice(&1u32.to_le_bytes()); // 1 point in multipoint
-        wkb_data.extend(make_wkb_header(Point(Xy), true)); // Contained Point header (5 bytes)
+        wkb_data.extend(make_wkb_header(Point(Xy))); // Contained Point header (5 bytes)
         wkb_data.extend_from_slice(&[0u8; 8]); // Only 8 bytes for contained point's coords, needs 16
         let result = Wkb::try_new(&wkb_data);
         assert!(result.is_err());
@@ -145,14 +140,14 @@ mod tests {
     #[test]
     fn test_wkb_multilinestring_buffer_too_short_for_num_multilinestrings_header() {
         // Missing num_linestrings for the MultiLineString itself (4 bytes)
-        let wkb_data = make_wkb_header(MultiLineString(Xy), true);
+        let wkb_data = make_wkb_header(MultiLineString(Xy));
         let result = Wkb::try_new(&wkb_data);
         assert!(result.is_err());
     }
 
     #[test]
     fn test_wkb_multilinestring_buffer_too_short_for_contained_linestring_header() {
-        let mut wkb_data = make_wkb_header(MultiLineString(Xy), true);
+        let mut wkb_data = make_wkb_header(MultiLineString(Xy));
         // 1 linestring, but its WKB header (5 bytes) is missing
         wkb_data.extend_from_slice(&1u32.to_le_bytes());
         let result = Wkb::try_new(&wkb_data);
@@ -161,10 +156,10 @@ mod tests {
 
     #[test]
     fn test_wkb_multilinestring_buffer_too_short_for_contained_linestring_num_points() {
-        let mut wkb_data = make_wkb_header(MultiLineString(Xy), true);
+        let mut wkb_data = make_wkb_header(MultiLineString(Xy));
         wkb_data.extend_from_slice(&1u32.to_le_bytes());
         // The contained LineString has a header, but its num_points (4 bytes) is missing
-        wkb_data.extend(make_wkb_header(LineString(Xy), true));
+        wkb_data.extend(make_wkb_header(LineString(Xy)));
         let result = Wkb::try_new(&wkb_data);
         assert!(result.is_err());
     }
@@ -173,14 +168,14 @@ mod tests {
     #[test]
     fn test_wkb_multipolygon_buffer_too_short_for_num_multipolygons_header() {
         // Missing num_polygons for the MultiPolygon itself (4 bytes)
-        let wkb_data = make_wkb_header(MultiPolygon(Xy), true);
+        let wkb_data = make_wkb_header(MultiPolygon(Xy));
         let result = Wkb::try_new(&wkb_data);
         assert!(result.is_err());
     }
 
     #[test]
     fn test_wkb_multipolygon_buffer_too_short_for_contained_polygon_header() {
-        let mut wkb_data = make_wkb_header(MultiPolygon(Xy), true);
+        let mut wkb_data = make_wkb_header(MultiPolygon(Xy));
         // 1 polygon, but its WKB header (5 bytes) is missing
         wkb_data.extend_from_slice(&1u32.to_le_bytes());
         let result = Wkb::try_new(&wkb_data);
@@ -191,14 +186,14 @@ mod tests {
     #[test]
     fn test_wkb_geomcollection_buffer_too_short_for_num_geometries_header() {
         // Missing num_geometries for the GeometryCollection itself (4 bytes)
-        let wkb_data = make_wkb_header(GeometryCollection(Xy), true);
+        let wkb_data = make_wkb_header(GeometryCollection(Xy));
         let result = Wkb::try_new(&wkb_data);
         assert!(result.is_err());
     }
 
     #[test]
     fn test_wkb_geomcollection_buffer_too_short_for_contained_geometry_header() {
-        let mut wkb_data = make_wkb_header(GeometryCollection(Xy), true);
+        let mut wkb_data = make_wkb_header(GeometryCollection(Xy));
         // 1 geometry, but its WKB header (e.g. a Point, 5 bytes) is missing
         wkb_data.extend_from_slice(&1u32.to_le_bytes());
         let result = Wkb::try_new(&wkb_data);
@@ -211,10 +206,10 @@ mod tests {
         // `levels` GeometryCollections each holding a single child, wrapping a terminal Point.
         let mut buf = Vec::new();
         for _ in 0..levels {
-            buf.extend(make_wkb_header(GeometryCollection(Xy), true));
+            buf.extend(make_wkb_header(GeometryCollection(Xy)));
             buf.extend_from_slice(&1u32.to_le_bytes()); // one geometry
         }
-        buf.extend(make_wkb_header(Point(Xy), true));
+        buf.extend(make_wkb_header(Point(Xy)));
         buf.extend_from_slice(&0.0f64.to_le_bytes());
         buf.extend_from_slice(&0.0f64.to_le_bytes());
         buf
@@ -253,7 +248,7 @@ mod tests {
     // A header claiming u32::MAX elements must not pre-allocate gigabytes before the (missing)
     // body is read; it should just fail to read the first element.
     fn assert_huge_count_errs(typ: WkbType) {
-        let mut wkb_data = make_wkb_header(typ, true);
+        let mut wkb_data = make_wkb_header(typ);
         wkb_data.extend_from_slice(&u32::MAX.to_le_bytes());
         assert!(Wkb::try_new(&wkb_data).is_err());
     }
