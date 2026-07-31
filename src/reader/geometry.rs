@@ -38,6 +38,10 @@ impl<'a> Wkb<'a> {
     /// access** but **not zero-copy**. This is because the raw WKB buffer is not 8-byte aligned,
     /// so when accessing a coordinate the underlying bytes need to be copied into a
     /// newly-allocated `f64`.
+    ///
+    /// Nesting is bounded by [`crate::reader::MAX_WKB_NESTING_DEPTH`]; deeper
+    /// input fails with [`WkbError::NestingDepthExceeded`] instead of
+    /// overflowing the stack.
     pub fn try_new(buf: &'a [u8]) -> WkbResult<Self> {
         Self::try_new_with_depth(buf, 0)
     }

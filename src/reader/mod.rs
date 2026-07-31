@@ -64,5 +64,5 @@ const HEADER_BYTES: u64 = 5;
 
 /// Maximum nesting depth of GeometryCollections that will be parsed. Parsing recurses once per
 /// level, so an unbounded value lets a tiny malicious input overflow the stack. 128 matches
-/// serde_json's default recursion limit and is far deeper than any real geometry.
+/// serde_json's default recursion limit.
 pub(crate) const MAX_WKB_NESTING_DEPTH: usize = 128;

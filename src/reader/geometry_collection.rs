@@ -27,10 +27,7 @@ impl<'a> GeometryCollection<'a> {
         depth: usize,
     ) -> WkbResult<Self> {
         if depth >= MAX_WKB_NESTING_DEPTH {
-            return Err(WkbError::General(format!(
-                "WKB nesting depth exceeds the maximum of {}",
-                MAX_WKB_NESTING_DEPTH
-            )));
+            return Err(WkbError::NestingDepthExceeded(MAX_WKB_NESTING_DEPTH));
         }
 
         let has_srid = has_srid(buf, byte_order)?;

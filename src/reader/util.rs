@@ -66,7 +66,7 @@ mod tests {
         );
         assert_eq!(
             bounded_capacity(u32::MAX as usize, 100, MIN_WKB_GEOMETRY_SIZE),
-            100 / MIN_WKB_GEOMETRY_SIZE
+            11
         );
     }
 
@@ -75,7 +75,7 @@ mod tests {
         // A valid buffer has room for every declared element, so the count is returned as-is.
         let count = 1000;
         assert_eq!(
-            bounded_capacity(count, count * MIN_WKB_GEOMETRY_SIZE, MIN_WKB_GEOMETRY_SIZE),
+            bounded_capacity(count, 9000, MIN_WKB_GEOMETRY_SIZE),
             count
         );
     }

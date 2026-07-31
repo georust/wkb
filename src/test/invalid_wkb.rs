@@ -1,6 +1,7 @@
 #[cfg(test)]
 mod tests {
-    use crate::reader::Wkb;
+    use crate::error::WkbError;
+    use crate::reader::{Wkb, MAX_WKB_NESTING_DEPTH};
 
     // --- Helper Functions ---
     fn make_wkb_header(type_id: u32, is_little_endian: bool) -> Vec<u8> {
@@ -202,7 +203,7 @@ mod tests {
 
     fn make_nested_geometry_collections(levels: usize) -> Vec<u8> {
         // `levels` GeometryCollections each holding a single child, wrapping a terminal Point.
-        let mut buf = Vec::with_capacity(levels * 9 + 21);
+        let mut buf = Vec::new();
         for _ in 0..levels {
             buf.extend(make_wkb_header(7, true)); // GeometryCollection
             buf.extend_from_slice(&1u32.to_le_bytes()); // one geometry
@@ -220,9 +221,26 @@ mod tests {
     }
 
     #[test]
+    fn test_wkb_nesting_at_depth_limit_is_ok() {
+        let wkb_data = make_nested_geometry_collections(MAX_WKB_NESTING_DEPTH);
+        assert!(Wkb::try_new(&wkb_data).is_ok());
+    }
+
+    #[test]
+    fn test_wkb_nesting_beyond_depth_limit_errs() {
+        let wkb_data = make_nested_geometry_collections(MAX_WKB_NESTING_DEPTH + 1);
+        match Wkb::try_new(&wkb_data) {
+            Err(WkbError::NestingDepthExceeded(limit)) => {
+                assert_eq!(limit, MAX_WKB_NESTING_DEPTH)
+            }
+            other => panic!("expected NestingDepthExceeded, got {:?}", other),
+        }
+    }
+
+    #[test]
     fn test_wkb_deeply_nested_geometry_collection_returns_err_not_stack_overflow() {
         // Without a depth limit this recurses until the stack overflows and aborts the process.
-        let wkb_data = make_nested_geometry_collections(200_000);
+        let wkb_data = make_nested_geometry_collections(1_000);
         assert!(Wkb::try_new(&wkb_data).is_err());
     }
 
