@@ -1,6 +1,6 @@
 # Changes
 
-## Unreleased
+## 0.9.3 - 2026-08-05
 
 - Avoid stack overflow and huge allocations on malformed WKB by capping GeometryCollection nesting depth and bounding collection pre-allocation to the remaining buffer size (#93).
 
