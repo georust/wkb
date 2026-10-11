@@ -4,7 +4,6 @@ use crate::writer::coord::write_coord;
 use crate::writer::WriteOptions;
 use crate::Endianness;
 use byteorder::{BigEndian, ByteOrder, LittleEndian, WriteBytesExt};
-use core::f64;
 use geo_traits::PointTrait;
 use std::io::Write;
 
