@@ -1,8 +1,11 @@
 # Changes
 
-## 0.9.3 - 2026-08-05
+## 0.9.3 - 2026-10-14
 
 - Avoid stack overflow and huge allocations on malformed WKB by capping GeometryCollection nesting depth and bounding collection pre-allocation to the remaining buffer size (#93).
+- Use `WkbType` variants instead of magic numbers in invalid WKB tests (#94)
+- Replace removed `doc_auto_cfg` feature with `doc_cfg` (#96)
+- Remove deprecated `core::f64::NAN` (#97)
 
 ## 0.9.2 - 2025-11-21
 
