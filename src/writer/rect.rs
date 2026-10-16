@@ -1,4 +1,4 @@
-use crate::common::WkbType;
+use crate::common::{Dimension, WkbType};
 use crate::error::WkbResult;
 use crate::writer::WriteOptions;
 use crate::Endianness;
@@ -10,11 +10,12 @@ use std::io::Write;
 ///
 /// Note that only 2D Rects are supported. Even if the input Rect has more than 2 dimensions, only
 /// the X and Y dimensions will be written.
-pub fn rect_wkb_size(geom: &impl RectTrait<T = f64>) -> usize {
+pub fn rect_wkb_size(_geom: &impl RectTrait<T = f64>) -> usize {
     let header = 1 + 4 + 4;
-    let each_coord = geom.dim().size() * 8;
+    let ring_header = 4;
+    let each_coord = 2 * 8;
     let all_coords = 5 * each_coord;
-    header + all_coords
+    header + ring_header + all_coords
 }
 
 /// Write a Rect geometry to a Writer encoded as WKB
@@ -46,12 +47,16 @@ fn write_rect_content<B: ByteOrder>(
     writer: &mut impl Write,
     geom: &impl RectTrait<T = f64>,
 ) -> WkbResult<()> {
-    let wkb_type = WkbType::Polygon(geom.dim().try_into()?);
+    let wkb_type = WkbType::Polygon(Dimension::Xy);
     writer.write_u32::<B>(wkb_type.into())?;
 
     // numRings
     let num_rings = 1;
     writer.write_u32::<B>(num_rings)?;
+
+    // numPoints
+    let num_coords = 5;
+    writer.write_u32::<B>(num_coords)?;
 
     let min_coord = geom.min();
     let max_coord = geom.max();

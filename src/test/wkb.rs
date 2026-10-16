@@ -1,12 +1,14 @@
 use geo_traits::to_geo::ToGeoGeometry;
-use geo_traits::{CoordTrait, GeometryTrait, LineStringTrait, PointTrait, PolygonTrait};
-use geo_types::Geometry;
+use geo_traits::{
+    CoordTrait, Dimensions, GeometryTrait, LineStringTrait, PointTrait, PolygonTrait,
+};
+use geo_types::{polygon, Geometry};
 
 use crate::reader::read_wkb;
 use crate::writer::{
-    polygon_wkb_size, write_geometry, write_geometry_collection, write_line_string,
+    polygon_wkb_size, rect_wkb_size, write_geometry, write_geometry_collection, write_line_string,
     write_multi_line_string, write_multi_point, write_multi_polygon, write_point, write_polygon,
-    WriteOptions,
+    write_rect, WriteOptions,
 };
 use crate::Endianness;
 
@@ -163,6 +165,51 @@ fn round_trip_polygon_empty_exterior_with_interior() {
 
         let retour = read_wkb(&buf).unwrap();
         assert_eq!(Geometry::Polygon(orig.clone()), retour.to_geometry());
+    }
+}
+
+#[test]
+fn round_trip_rect() {
+    let orig = rect_2d();
+    let expected = polygon![
+        (x: 0., y: 1.),
+        (x: 0., y: 3.),
+        (x: 2., y: 3.),
+        (x: 2., y: 1.),
+        (x: 0., y: 1.),
+    ];
+
+    for endianness in [Endianness::LittleEndian, Endianness::BigEndian] {
+        let mut buf = Vec::new();
+        write_rect(&mut buf, &orig, &WriteOptions { endianness }).unwrap();
+        assert_eq!(buf.len(), rect_wkb_size(&orig));
+
+        let retour = read_wkb(&buf).unwrap();
+        assert_eq!(retour.buf().len(), buf.len());
+        assert_eq!(Geometry::Polygon(expected.clone()), retour.to_geometry());
+    }
+}
+
+#[test]
+fn rect_3d_writes_xy() {
+    let orig = rect_3d();
+    let expected = polygon![
+        (x: 0., y: 1.),
+        (x: 0., y: 3.),
+        (x: 2., y: 3.),
+        (x: 2., y: 1.),
+        (x: 0., y: 1.),
+    ];
+
+    for endianness in [Endianness::LittleEndian, Endianness::BigEndian] {
+        let mut buf = Vec::new();
+        write_rect(&mut buf, &orig, &WriteOptions { endianness }).unwrap();
+        assert_eq!(buf.len(), rect_wkb_size(&orig));
+
+        let retour = read_wkb(&buf).unwrap();
+        assert_eq!(retour.buf().len(), buf.len());
+        assert_eq!(retour.dim(), Dimensions::Xy);
+        assert_eq!(Geometry::Polygon(expected.clone()), retour.to_geometry());
     }
 }
 
