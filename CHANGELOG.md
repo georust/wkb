@@ -4,6 +4,7 @@
 
 - Write an empty exterior ring for a polygon that has interior rings but no exterior ring. Previously the writer wrote `numRings = 0` followed by the interior rings, which readers parsed as `POLYGON EMPTY` with trailing data (#100).
 - Write the `numPoints` field for the ring of a `Rect`, and always write a `Rect` as a 2D polygon. Previously the writer wrote `numRings = 1` followed directly by the coordinates, which readers could not parse, and labelled a 3D `Rect` as `PolygonZ` while writing 2D coordinates (#101).
+- Count the ring's `numPoints` field in `triangle_wkb_size`. Previously the size was 4 bytes smaller than the bytes written (#102).
 
 ## 0.9.3 - 2026-10-14
 
