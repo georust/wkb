@@ -4,8 +4,9 @@ use geo_types::Geometry;
 
 use crate::reader::read_wkb;
 use crate::writer::{
-    write_geometry, write_geometry_collection, write_line_string, write_multi_line_string,
-    write_multi_point, write_multi_polygon, write_point, write_polygon, WriteOptions,
+    polygon_wkb_size, write_geometry, write_geometry_collection, write_line_string,
+    write_multi_line_string, write_multi_point, write_multi_polygon, write_point, write_polygon,
+    WriteOptions,
 };
 use crate::Endianness;
 
@@ -128,6 +129,41 @@ fn round_trip_polygon_with_interior() {
     .unwrap();
     let retour = read_wkb(&buf).unwrap();
     assert_eq!(Geometry::Polygon(orig), retour.to_geometry());
+}
+
+#[test]
+fn round_trip_polygon_empty() {
+    let orig = polygon_2d_empty();
+
+    let mut buf = Vec::new();
+    write_polygon(
+        &mut buf,
+        &orig,
+        &WriteOptions {
+            endianness: Endianness::LittleEndian,
+        },
+    )
+    .unwrap();
+    // Byte order, geometry type and numRings = 0
+    assert_eq!(buf, [1, 3, 0, 0, 0, 0, 0, 0, 0]);
+    assert_eq!(buf.len(), polygon_wkb_size(&orig));
+
+    let retour = read_wkb(&buf).unwrap();
+    assert_eq!(Geometry::Polygon(orig), retour.to_geometry());
+}
+
+#[test]
+fn round_trip_polygon_empty_exterior_with_interior() {
+    let orig = polygon_2d_empty_exterior_with_interior();
+
+    for endianness in [Endianness::LittleEndian, Endianness::BigEndian] {
+        let mut buf = Vec::new();
+        write_polygon(&mut buf, &orig, &WriteOptions { endianness }).unwrap();
+        assert_eq!(buf.len(), polygon_wkb_size(&orig));
+
+        let retour = read_wkb(&buf).unwrap();
+        assert_eq!(Geometry::Polygon(orig.clone()), retour.to_geometry());
+    }
 }
 
 #[test]
@@ -445,6 +481,11 @@ fn wkb_polygon_buf_with_trailing_data() {
 #[test]
 fn wkb_polygon_with_interior_buf_with_trailing_data() {
     test_wkb_buf_with_trailing_data(&Geometry::Polygon(polygon_2d_with_interior()));
+}
+
+#[test]
+fn wkb_polygon_empty_exterior_with_interior_buf_with_trailing_data() {
+    test_wkb_buf_with_trailing_data(&Geometry::Polygon(polygon_2d_empty_exterior_with_interior()));
 }
 
 #[test]
