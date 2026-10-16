@@ -9,22 +9,34 @@ use std::io::Write;
 
 /// The number of bytes this Polygon will take up when encoded as WKB
 pub fn polygon_wkb_size(geom: &impl PolygonTrait<T = f64>) -> usize {
-    let mut sum = 1 + 4 + 4;
-
     let each_coord = geom.dim().size() * 8;
+    let num_coords = geom.exterior().map_or(0, |ring| ring.num_coords())
+        + geom
+            .interiors()
+            .map(|ring| ring.num_coords())
+            .sum::<usize>();
 
-    if let Some(ext_ring) = geom.exterior() {
-        sum += 4 + (ext_ring.num_coords() * each_coord);
+    1 + 4 + 4 + (4 * wkb_num_rings(geom)) + (num_coords * each_coord)
+}
+
+/// The number of rings this Polygon will have when encoded as WKB.
+///
+/// If the Polygon has interior rings but no exterior ring, the WKB contains an
+/// empty exterior ring, because the first ring is always the exterior.
+fn wkb_num_rings(geom: &impl PolygonTrait<T = f64>) -> usize {
+    match (geom.exterior(), geom.num_interiors()) {
+        (None, 0) => 0,
+        (_, num_interiors) => 1 + num_interiors,
     }
-
-    for int_ring in geom.interiors() {
-        sum += 4 + (int_ring.num_coords() * each_coord);
-    }
-
-    sum
 }
 
 /// Write a Polygon geometry to a Writer encoded as WKB
+///
+/// If the Polygon has interior rings but no exterior ring, this function writes an empty
+/// exterior ring (zero points) before the interior rings. GDAL can write and read this
+/// encoding. GEOS and JTS do not accept a Polygon with an empty exterior ring and non-empty
+/// interior rings, and return an error when they read it. PostGIS returns an error when its
+/// default parser checks are enabled.
 pub fn write_polygon(
     writer: &mut impl Write,
     geom: &impl PolygonTrait<T = f64>,
@@ -48,27 +60,35 @@ fn write_polygon_content<B: ByteOrder>(
     writer.write_u32::<B>(wkb_type.into())?;
 
     // numRings
-    let num_rings = if geom.exterior().is_some() {
-        1 + geom.num_interiors()
-    } else {
-        0
-    };
+    let num_rings = wkb_num_rings(geom);
     writer.write_u32::<B>(num_rings.try_into()?)?;
 
-    if let Some(ext_ring) = geom.exterior() {
-        writer.write_u32::<B>(ext_ring.num_coords().try_into()?)?;
+    if num_rings == 0 {
+        return Ok(());
+    }
 
-        for coord in ext_ring.coords() {
-            write_coord::<B>(writer, &coord)?;
-        }
+    match geom.exterior() {
+        Some(ext_ring) => write_ring::<B>(writer, &ext_ring)?,
+        // Empty exterior ring
+        None => writer.write_u32::<B>(0)?,
     }
 
     for int_ring in geom.interiors() {
-        writer.write_u32::<B>(int_ring.num_coords().try_into()?)?;
+        write_ring::<B>(writer, &int_ring)?;
+    }
 
-        for coord in int_ring.coords() {
-            write_coord::<B>(writer, &coord)?;
-        }
+    Ok(())
+}
+
+fn write_ring<B: ByteOrder>(
+    writer: &mut impl Write,
+    ring: &impl LineStringTrait<T = f64>,
+) -> WkbResult<()> {
+    // numPoints
+    writer.write_u32::<B>(ring.num_coords().try_into()?)?;
+
+    for coord in ring.coords() {
+        write_coord::<B>(writer, &coord)?;
     }
 
     Ok(())

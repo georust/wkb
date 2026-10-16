@@ -1,5 +1,9 @@
 # Changes
 
+## Unreleased
+
+- Write an empty exterior ring for a polygon that has interior rings but no exterior ring. Previously the writer wrote `numRings = 0` followed by the interior rings, which readers parsed as `POLYGON EMPTY` with trailing data (#100).
+
 ## 0.9.3 - 2026-10-14
 
 - Avoid stack overflow and huge allocations on malformed WKB by capping GeometryCollection nesting depth and bounding collection pre-allocation to the remaining buffer size (#93).

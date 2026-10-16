@@ -44,6 +44,23 @@ pub(super) fn polygon_2d_with_interior() -> Polygon {
     )
 }
 
+pub(super) fn polygon_2d_empty() -> Polygon {
+    Polygon::new(LineString::new(vec![]), vec![])
+}
+
+/// A polygon with an empty exterior ring and one interior ring.
+pub(super) fn polygon_2d_empty_exterior_with_interior() -> Polygon {
+    Polygon::new(
+        LineString::new(vec![]),
+        vec![line_string![
+            (x: 1., y: 2.),
+            (x: 3., y: 4.),
+            (x: 5., y: 2.),
+            (x: 1., y: 2.)
+        ]],
+    )
+}
+
 pub(super) fn multi_point_2d() -> MultiPoint {
     MultiPoint::new(vec![
         point!(
