@@ -6,7 +6,7 @@ use geo_traits::{
 };
 use geo_types::{
     coord, line_string, point, polygon, Geometry, GeometryCollection, LineString, MultiLineString,
-    MultiPoint, MultiPolygon, Point, Polygon, Rect,
+    MultiPoint, MultiPolygon, Point, Polygon, Rect, Triangle,
 };
 
 pub(super) fn point_2d() -> Point {
@@ -69,6 +69,14 @@ pub(super) fn polygon_2d_empty_exterior_with_interior() -> Polygon {
 
 pub(super) fn rect_2d() -> Rect {
     Rect::new(coord! { x: 0., y: 1. }, coord! { x: 2., y: 3. })
+}
+
+pub(super) fn triangle_2d() -> Triangle {
+    Triangle::new(
+        coord! { x: 0., y: 0. },
+        coord! { x: 1., y: 2. },
+        coord! { x: 2., y: 0. },
+    )
 }
 
 pub(super) fn multi_point_2d() -> MultiPoint {
