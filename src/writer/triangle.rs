@@ -10,9 +10,10 @@ use std::io::Write;
 /// The number of bytes this Triangle will take up when encoded as WKB
 pub fn triangle_wkb_size(geom: &impl TriangleTrait<T = f64>) -> usize {
     let header = 1 + 4 + 4;
+    let ring_header = 4;
     let each_coord = geom.dim().size() * 8;
     let all_coords = 4 * each_coord;
-    header + all_coords
+    header + ring_header + all_coords
 }
 
 /// Write a Triangle geometry to a Writer encoded as WKB
