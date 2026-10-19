@@ -123,7 +123,7 @@ impl WkbGeometryCode {
             _ => (),
         }
 
-        let typ = match code & 0x7 {
+        let typ = match (code & !(EWKB_FLAG_Z | EWKB_FLAG_M | EWKB_FLAG_SRID)) % 1000 {
             1 => WkbType::Point(dim),
             2 => WkbType::LineString(dim),
             3 => WkbType::Polygon(dim),
