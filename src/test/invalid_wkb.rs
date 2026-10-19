@@ -42,8 +42,11 @@ mod tests {
             wkb_data.extend_from_slice(&f64::to_le_bytes(x));
             wkb_data.extend_from_slice(&f64::to_le_bytes(y));
         }
-        let result = Wkb::try_new(&wkb_data);
-        assert!(result.is_err());
+        let err = Wkb::try_new(&wkb_data).unwrap_err();
+        assert_eq!(
+            err.to_string(),
+            "General error: WKB type code out of range. Got: 17"
+        );
     }
 
     #[test]
@@ -63,8 +66,11 @@ mod tests {
             wkb_data.extend_from_slice(&f64::to_le_bytes(y));
             wkb_data.extend_from_slice(&f64::to_le_bytes(z));
         }
-        let result = Wkb::try_new(&wkb_data);
-        assert!(result.is_err());
+        let err = Wkb::try_new(&wkb_data).unwrap_err();
+        assert_eq!(
+            err.to_string(),
+            "General error: WKB type code out of range. Got: 1017"
+        );
     }
 
     // --- Point WKB Errors ---
