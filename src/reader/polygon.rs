@@ -14,7 +14,7 @@ use geo_traits::PolygonTrait;
 #[derive(Debug, Clone)]
 pub struct Polygon<'a> {
     exterior: Option<LinearRing<'a>>,
-    interiors: Vec<LinearRing<'a>>,
+    interiors: Box<[LinearRing<'a>]>,
     buf: &'a [u8],
     dim: Dimension,
 }
@@ -61,7 +61,7 @@ impl<'a> Polygon<'a> {
 
         Ok(Self {
             exterior,
-            interiors,
+            interiors: interiors.into_boxed_slice(),
             buf: &buf[0..ring_offset as usize],
             dim,
         })
