@@ -13,11 +13,24 @@ use geo_traits::PolygonTrait;
 /// This has been preprocessed, so access to any internal coordinate is `O(1)`.
 #[derive(Debug, Clone)]
 pub struct Polygon<'a> {
-    exterior: Option<LinearRing<'a>>,
+    exterior: Exterior<'a>,
     interiors: Box<[LinearRing<'a>]>,
     buf: &'a [u8],
-    dim: Dimension,
 }
+
+/// The exterior ring of a [`Polygon`], or the polygon's dimension if it has no rings.
+///
+/// An empty polygon has no ring to read its dimension from, so `Missing` carries it instead
+#[derive(Debug, Clone, Copy)]
+enum Exterior<'a> {
+    Missing(Dimension),
+    Present(LinearRing<'a>),
+}
+
+/// Fixme: use `std::hint::cold_path` once MSRV is Rust 1.95.
+#[cold]
+#[inline]
+fn cold_path() {}
 
 impl<'a> Polygon<'a> {
     /// Construct a new Polygon from a WKB buffer.
@@ -48,9 +61,10 @@ impl<'a> Polygon<'a> {
         let exterior = if num_rings > 0 {
             let ring = LinearRing::try_new(&buf[ring_offset as usize..], byte_order, dim)?;
             ring_offset += ring.size();
-            Some(ring)
+            Exterior::Present(ring)
         } else {
-            None
+            cold_path();
+            Exterior::Missing(dim)
         };
         let mut interiors = Vec::with_capacity(capacity.saturating_sub(1));
         for _ in 1..num_rings {
@@ -63,8 +77,18 @@ impl<'a> Polygon<'a> {
             exterior,
             interiors: interiors.into_boxed_slice(),
             buf: &buf[0..ring_offset as usize],
-            dim,
         })
+    }
+
+    #[inline]
+    fn exterior_ring(&self) -> Option<&LinearRing<'a>> {
+        match &self.exterior {
+            Exterior::Present(ring) => Some(ring),
+            Exterior::Missing(_) => {
+                cold_path();
+                None
+            }
+        }
     }
 
     /// The number of bytes in this object, including any header
@@ -75,7 +99,13 @@ impl<'a> Polygon<'a> {
 
     /// The dimension of this Polygon
     pub fn dimension(&self) -> Dimension {
-        self.dim
+        match &self.exterior {
+            Exterior::Present(ring) => ring.dimension(),
+            Exterior::Missing(dim) => {
+                cold_path();
+                *dim
+            }
+        }
     }
 
     /// Get the underlying buffer of this Polygon
@@ -96,7 +126,7 @@ impl<'a> PolygonTrait for Polygon<'a> {
     }
 
     fn exterior(&self) -> Option<Self::RingType<'_>> {
-        self.exterior.as_ref()
+        self.exterior_ring()
     }
 
     unsafe fn interior_unchecked(&self, i: usize) -> Self::RingType<'_> {
@@ -115,7 +145,7 @@ impl<'a, 'b> PolygonTrait for &'b Polygon<'a> {
     }
 
     fn exterior(&self) -> Option<Self::RingType<'_>> {
-        self.exterior.as_ref()
+        self.exterior_ring()
     }
 
     unsafe fn interior_unchecked(&self, i: usize) -> Self::RingType<'_> {
