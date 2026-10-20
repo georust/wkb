@@ -13,7 +13,8 @@ use geo_traits::PolygonTrait;
 /// This has been preprocessed, so access to any internal coordinate is `O(1)`.
 #[derive(Debug, Clone)]
 pub struct Polygon<'a> {
-    wkb_linear_rings: Vec<LinearRing<'a>>,
+    exterior: Option<LinearRing<'a>>,
+    interiors: Vec<LinearRing<'a>>,
     buf: &'a [u8],
     dim: Dimension,
 }
@@ -44,15 +45,23 @@ impl<'a> Polygon<'a> {
             buf.len().saturating_sub(ring_offset as usize),
             MIN_LINEAR_RING_SIZE,
         );
-        let mut wkb_linear_rings = Vec::with_capacity(capacity);
-        for _ in 0..num_rings {
+        let exterior = if num_rings > 0 {
             let ring = LinearRing::try_new(&buf[ring_offset as usize..], byte_order, dim)?;
             ring_offset += ring.size();
-            wkb_linear_rings.push(ring);
+            Some(ring)
+        } else {
+            None
+        };
+        let mut interiors = Vec::with_capacity(capacity.saturating_sub(1));
+        for _ in 1..num_rings {
+            let ring = LinearRing::try_new(&buf[ring_offset as usize..], byte_order, dim)?;
+            ring_offset += ring.size();
+            interiors.push(ring);
         }
 
         Ok(Self {
-            wkb_linear_rings,
+            exterior,
+            interiors,
             buf: &buf[0..ring_offset as usize],
             dim,
         })
@@ -83,24 +92,15 @@ impl<'a> PolygonTrait for Polygon<'a> {
         Self: 'b;
 
     fn num_interiors(&self) -> usize {
-        // Support an empty polygon with no rings
-        if self.wkb_linear_rings.is_empty() {
-            0
-        } else {
-            self.wkb_linear_rings.len() - 1
-        }
+        self.interiors.len()
     }
 
     fn exterior(&self) -> Option<Self::RingType<'_>> {
-        if self.wkb_linear_rings.is_empty() {
-            None
-        } else {
-            Some(&self.wkb_linear_rings[0])
-        }
+        self.exterior.as_ref()
     }
 
     unsafe fn interior_unchecked(&self, i: usize) -> Self::RingType<'_> {
-        self.wkb_linear_rings.get_unchecked(i + 1)
+        self.interiors.get_unchecked(i)
     }
 }
 
@@ -111,23 +111,14 @@ impl<'a, 'b> PolygonTrait for &'b Polygon<'a> {
         Self: 'c;
 
     fn num_interiors(&self) -> usize {
-        // Support an empty polygon with no rings
-        if self.wkb_linear_rings.is_empty() {
-            0
-        } else {
-            self.wkb_linear_rings.len() - 1
-        }
+        self.interiors.len()
     }
 
     fn exterior(&self) -> Option<Self::RingType<'_>> {
-        if self.wkb_linear_rings.is_empty() {
-            None
-        } else {
-            Some(&self.wkb_linear_rings[0])
-        }
+        self.exterior.as_ref()
     }
 
     unsafe fn interior_unchecked(&self, i: usize) -> Self::RingType<'_> {
-        self.wkb_linear_rings.get_unchecked(i + 1)
+        self.interiors.get_unchecked(i)
     }
 }
