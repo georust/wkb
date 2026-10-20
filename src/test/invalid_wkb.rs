@@ -53,6 +53,7 @@ mod tests {
     fn test_wkb_triangle_z_is_unsupported() {
         // TRIANGLE Z((0 0 0, 1 0 0, 1 1 0, 0 0 0)), as PostGIS writes it
         let mut wkb_data = vec![0x01];
+        // 1017 is the type code for a 3D triangle
         wkb_data.extend_from_slice(&1017u32.to_le_bytes());
         wkb_data.extend_from_slice(&1u32.to_le_bytes());
         wkb_data.extend_from_slice(&4u32.to_le_bytes());
