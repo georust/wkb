@@ -17,7 +17,7 @@ pub struct LineString<'a> {
     byte_order: Endianness,
 
     /// The number of points in this LineString WKB
-    num_points: usize,
+    num_points: u32,
 
     /// The offset into the buffer where the first coord is located
     coord_offset: u64,
@@ -38,10 +38,7 @@ impl<'a> LineString<'a> {
         let num_points_offset = HEADER_BYTES + if has_srid { 4 } else { 0 };
         let mut reader = Cursor::new(buf);
         reader.set_position(num_points_offset);
-        let num_points = reader
-            .read_u32(byte_order)?
-            .try_into()
-            .map_err(|e| WkbError::General(format!("Invalid number of points: {}", e)))?;
+        let num_points = reader.read_u32(byte_order)?;
 
         let coord_offset = num_points_offset + 4; // Skip the 4-byte num_points field
 
@@ -118,7 +115,7 @@ impl<'a> LineStringTrait for LineString<'a> {
 
     #[inline]
     fn num_coords(&self) -> usize {
-        self.num_points
+        self.num_points as usize
     }
 
     #[inline]
@@ -137,7 +134,7 @@ impl<'a> LineStringTrait for &LineString<'a> {
 
     #[inline]
     fn num_coords(&self) -> usize {
-        self.num_points
+        self.num_points as usize
     }
 
     #[inline]
