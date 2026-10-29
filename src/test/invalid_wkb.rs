@@ -30,6 +30,50 @@ mod tests {
         assert!(result.is_err());
     }
 
+    // --- Unsupported Type Errors ---
+    #[test]
+    fn test_wkb_triangle_is_unsupported() {
+        // TRIANGLE((0 0, 1 0, 1 1, 0 0)), as PostGIS writes it
+        let mut wkb_data = vec![0x01];
+        wkb_data.extend_from_slice(&17u32.to_le_bytes());
+        wkb_data.extend_from_slice(&1u32.to_le_bytes());
+        wkb_data.extend_from_slice(&4u32.to_le_bytes());
+        for [x, y] in [[0.0, 0.0], [1.0, 0.0], [1.0, 1.0], [0.0, 0.0]] {
+            wkb_data.extend_from_slice(&f64::to_le_bytes(x));
+            wkb_data.extend_from_slice(&f64::to_le_bytes(y));
+        }
+        let err = Wkb::try_new(&wkb_data).unwrap_err();
+        assert_eq!(
+            err.to_string(),
+            "General error: WKB type code out of range. Got: 17"
+        );
+    }
+
+    #[test]
+    fn test_wkb_triangle_z_is_unsupported() {
+        // TRIANGLE Z((0 0 0, 1 0 0, 1 1 0, 0 0 0)), as PostGIS writes it
+        let mut wkb_data = vec![0x01];
+        // 1017 is the type code for a 3D triangle
+        wkb_data.extend_from_slice(&1017u32.to_le_bytes());
+        wkb_data.extend_from_slice(&1u32.to_le_bytes());
+        wkb_data.extend_from_slice(&4u32.to_le_bytes());
+        for [x, y, z] in [
+            [0.0, 0.0, 0.0],
+            [1.0, 0.0, 0.0],
+            [1.0, 1.0, 0.0],
+            [0.0, 0.0, 0.0],
+        ] {
+            wkb_data.extend_from_slice(&f64::to_le_bytes(x));
+            wkb_data.extend_from_slice(&f64::to_le_bytes(y));
+            wkb_data.extend_from_slice(&f64::to_le_bytes(z));
+        }
+        let err = Wkb::try_new(&wkb_data).unwrap_err();
+        assert_eq!(
+            err.to_string(),
+            "General error: WKB type code out of range. Got: 1017"
+        );
+    }
+
     // --- Point WKB Errors ---
     #[test]
     fn test_wkb_point_xy_buffer_too_short_for_coords() {
