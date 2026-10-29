@@ -6,6 +6,7 @@
 - Write the `numPoints` field for the ring of a `Rect`, and always write a `Rect` as a 2D polygon. Previously the writer wrote `numRings = 1` followed directly by the coordinates, which readers could not parse, and labelled a 3D `Rect` as `PolygonZ` while writing 2D coordinates (#101).
 - Count the ring's `numPoints` field in `triangle_wkb_size`. Previously the size was 4 bytes smaller than the bytes written (#102).
 - Store the parsed children of `MultiLineString`, `MultiPolygon` and `GeometryCollection` in a boxed slice instead of a `Vec`, shrinking each of these structs from 48 to 40 bytes (#107).
+- Reject geometry type codes 8 and above, such as a Triangle (17), when reading. Previously the type was read as `code & 0x7`, so these codes parsed as another type: a Triangle as a Point (#104).
 
 ## 0.9.3 - 2026-10-14
 
