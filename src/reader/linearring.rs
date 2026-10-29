@@ -26,7 +26,7 @@ pub struct LinearRing<'a> {
     byte_order: Endianness,
 
     /// The number of points in this linear ring
-    num_points: usize,
+    num_points: u32,
 
     dim: Dimension,
 }
@@ -41,10 +41,7 @@ impl<'a> LinearRing<'a> {
         dim: Dimension,
     ) -> WkbResult<Self> {
         let mut reader = Cursor::new(buf);
-        let num_points = reader
-            .read_u32(byte_order)?
-            .try_into()
-            .map_err(|e| WkbError::General(format!("Invalid number of points: {}", e)))?;
+        let num_points = reader.read_u32(byte_order)?;
 
         let mut ring = Self {
             buf,
@@ -113,7 +110,7 @@ impl<'a> LineStringTrait for LinearRing<'a> {
 
     #[inline]
     fn num_coords(&self) -> usize {
-        self.num_points
+        self.num_points as usize
     }
 
     #[inline]
@@ -131,7 +128,7 @@ impl<'a> LineStringTrait for &LinearRing<'a> {
 
     #[inline]
     fn num_coords(&self) -> usize {
-        self.num_points
+        self.num_points as usize
     }
 
     #[inline]
