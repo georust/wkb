@@ -17,7 +17,7 @@ pub struct MultiPoint<'a> {
     byte_order: Endianness,
 
     /// The number of points in this multi point
-    num_points: usize,
+    num_points: u32,
 
     /// The offset into the buffer where the first point is located
     points_offset: u64,
@@ -37,10 +37,7 @@ impl<'a> MultiPoint<'a> {
         let mut reader = Cursor::new(buf);
         // Set reader to after 1-byte byteOrder and 4-byte wkbType
         reader.set_position(num_points_offset);
-        let num_points = reader
-            .read_u32(byte_order)?
-            .try_into()
-            .map_err(|e| WkbError::General(format!("Invalid number of points: {}", e)))?;
+        let num_points = reader.read_u32(byte_order)?;
 
         let points_offset = num_points_offset + 4;
         let mut multipoint = Self {
@@ -98,7 +95,7 @@ impl<'a> MultiPointTrait for MultiPoint<'a> {
         Self: 'b;
 
     fn num_points(&self) -> usize {
-        self.num_points
+        self.num_points as usize
     }
 
     unsafe fn point_unchecked(&self, i: usize) -> Self::InnerPointType<'_> {
@@ -114,7 +111,7 @@ impl<'a> MultiPointTrait for &MultiPoint<'a> {
         Self: 'b;
 
     fn num_points(&self) -> usize {
-        self.num_points
+        self.num_points as usize
     }
 
     unsafe fn point_unchecked(&self, i: usize) -> Self::InnerPointType<'_> {

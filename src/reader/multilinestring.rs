@@ -14,7 +14,7 @@ use geo_traits::MultiLineStringTrait;
 #[derive(Debug, Clone)]
 pub struct MultiLineString<'a> {
     /// A LineString object for each of the internal line strings
-    wkb_line_strings: Vec<LineString<'a>>,
+    wkb_line_strings: Box<[LineString<'a>]>,
     buf: &'a [u8],
     dim: Dimension,
 }
@@ -50,7 +50,7 @@ impl<'a> MultiLineString<'a> {
         }
 
         Ok(Self {
-            wkb_line_strings,
+            wkb_line_strings: wkb_line_strings.into_boxed_slice(),
             buf: &buf[0..line_string_offset as usize],
             dim,
         })

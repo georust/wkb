@@ -12,7 +12,7 @@ use geo_traits::MultiPolygonTrait;
 #[derive(Debug, Clone)]
 pub struct MultiPolygon<'a> {
     /// A Polygon object for each of the internal line strings
-    wkb_polygons: Vec<Polygon<'a>>,
+    wkb_polygons: Box<[Polygon<'a>]>,
     buf: &'a [u8],
     dim: Dimension,
 }
@@ -48,7 +48,7 @@ impl<'a> MultiPolygon<'a> {
         }
 
         Ok(Self {
-            wkb_polygons,
+            wkb_polygons: wkb_polygons.into_boxed_slice(),
             buf: &buf[0..polygon_offset as usize],
             dim,
         })

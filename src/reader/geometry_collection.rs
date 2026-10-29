@@ -11,7 +11,7 @@ use geo_traits::GeometryCollectionTrait;
 #[derive(Debug, Clone)]
 pub struct GeometryCollection<'a> {
     /// A WKB object for each of the internal geometries
-    geometries: Vec<Wkb<'a>>,
+    geometries: Box<[Wkb<'a>]>,
     buf: &'a [u8],
     dim: Dimension,
 }
@@ -55,7 +55,7 @@ impl<'a> GeometryCollection<'a> {
         }
 
         Ok(Self {
-            geometries,
+            geometries: geometries.into_boxed_slice(),
             buf: &buf[0..geometry_offset],
             dim,
         })
