@@ -1,9 +1,7 @@
-use std::io::Cursor;
-
 use crate::common::Dimension;
 use crate::error::{WkbError, WkbResult};
 use crate::reader::linestring::LineString;
-use crate::reader::util::{bounded_capacity, has_srid, ReadBytesExt, MIN_WKB_GEOMETRY_SIZE};
+use crate::reader::util::{bounded_capacity, has_srid, read_u32_at, MIN_WKB_GEOMETRY_SIZE};
 use crate::reader::HEADER_BYTES;
 use crate::Endianness;
 use geo_traits::MultiLineStringTrait;
@@ -28,10 +26,7 @@ impl<'a> MultiLineString<'a> {
         let has_srid = has_srid(buf, byte_order)?;
         let num_line_strings_offset = HEADER_BYTES + if has_srid { 4 } else { 0 };
 
-        let mut reader = Cursor::new(buf);
-        reader.set_position(num_line_strings_offset);
-        let num_line_strings = reader
-            .read_u32(byte_order)?
+        let num_line_strings = read_u32_at(buf, num_line_strings_offset, byte_order)?
             .try_into()
             .map_err(|e| WkbError::General(format!("Invalid number of line strings: {}", e)))?;
 

@@ -1,9 +1,6 @@
-use std::io::Cursor;
-
-use byteorder::ReadBytesExt;
-
-use crate::common::{Dimension, WkbType};
+use crate::common::{Dimension, WkbGeometryCode, WkbType};
 use crate::error::{WkbError, WkbResult};
+use crate::reader::util::{read_u32_at, unexpected_eof};
 use crate::reader::{
     GeometryCollection, GeometryType, LineString, MultiLineString, MultiPoint, MultiPolygon, Point,
     Polygon,
@@ -127,10 +124,9 @@ pub(crate) enum WkbInner<'a> {
 
 impl<'a> WkbInner<'a> {
     fn try_new(buf: &'a [u8], depth: usize) -> WkbResult<Self> {
-        let mut reader = Cursor::new(buf);
-        let byte_order = Endianness::try_from(reader.read_u8()?)
+        let byte_order = Endianness::try_from(*buf.first().ok_or_else(unexpected_eof)?)
             .map_err(|_| WkbError::General("Invalid byte order".to_string()))?;
-        let wkb_type = WkbType::from_buffer(buf)?;
+        let wkb_type = WkbGeometryCode::new(read_u32_at(buf, 1, byte_order)?).get_type()?;
 
         let out = match wkb_type {
             WkbType::Point(dim) => Self::Point(Point::try_new(buf, byte_order, dim)?),
