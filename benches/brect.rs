@@ -1,6 +1,7 @@
 use criterion::{criterion_group, criterion_main};
 use geo_traits::{CoordTrait, GeometryTrait, GeometryType, LineStringTrait, PolygonTrait};
 use geo_types::{coord, Geometry};
+use std::hint::black_box;
 use wkt::TryFromWkt;
 
 fn load_small_wkt() -> Geometry {
@@ -39,7 +40,7 @@ fn bench_brect_small(c: &mut criterion::Criterion) {
             }
             let rect =
                 geo_types::Rect::new(coord! { x: min_x, y: min_y }, coord! { x: max_x, y: max_y });
-            criterion::black_box(rect);
+            black_box(rect);
         });
     });
 }

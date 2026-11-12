@@ -14,7 +14,7 @@ fn read_point_srid() {
 
     let mut wkb_writer = WKBWriter::new().unwrap();
     wkb_writer.set_include_SRID(true);
-    let buf: Vec<u8> = wkb_writer.write_wkb(&geos_geom).unwrap().into();
+    let buf: Vec<u8> = wkb_writer.write_wkb(&geos_geom).unwrap();
 
     let retour = read_wkb(&buf).unwrap();
     assert_eq!(Geometry::Point(orig), retour.to_geometry());
@@ -29,7 +29,7 @@ fn read_line_string_srid() {
 
     let mut wkb_writer = WKBWriter::new().unwrap();
     wkb_writer.set_include_SRID(true);
-    let buf: Vec<u8> = wkb_writer.write_wkb(&geos_geom).unwrap().into();
+    let buf: Vec<u8> = wkb_writer.write_wkb(&geos_geom).unwrap();
 
     let retour = read_wkb(&buf).unwrap();
     assert_eq!(Geometry::LineString(orig.clone()), retour.to_geometry());
@@ -44,7 +44,7 @@ fn read_polygon() {
 
     let mut wkb_writer = WKBWriter::new().unwrap();
     wkb_writer.set_include_SRID(true);
-    let buf: Vec<u8> = wkb_writer.write_wkb(&geos_geom).unwrap().into();
+    let buf: Vec<u8> = wkb_writer.write_wkb(&geos_geom).unwrap();
 
     let retour = read_wkb(&buf).unwrap();
     assert_eq!(Geometry::Polygon(orig.clone()), retour.to_geometry());
@@ -59,7 +59,7 @@ fn read_polygon_with_interior() {
 
     let mut wkb_writer = WKBWriter::new().unwrap();
     wkb_writer.set_include_SRID(true);
-    let buf: Vec<u8> = wkb_writer.write_wkb(&geos_geom).unwrap().into();
+    let buf: Vec<u8> = wkb_writer.write_wkb(&geos_geom).unwrap();
 
     let retour = read_wkb(&buf).unwrap();
     assert_eq!(Geometry::Polygon(orig.clone()), retour.to_geometry());
@@ -74,7 +74,7 @@ fn read_multi_point() {
 
     let mut wkb_writer = WKBWriter::new().unwrap();
     wkb_writer.set_include_SRID(true);
-    let buf: Vec<u8> = wkb_writer.write_wkb(&geos_geom).unwrap().into();
+    let buf: Vec<u8> = wkb_writer.write_wkb(&geos_geom).unwrap();
 
     let retour = read_wkb(&buf).unwrap();
     assert_eq!(Geometry::MultiPoint(orig.clone()), retour.to_geometry());
@@ -89,7 +89,7 @@ fn read_multi_line_string() {
 
     let mut wkb_writer = WKBWriter::new().unwrap();
     wkb_writer.set_include_SRID(true);
-    let buf: Vec<u8> = wkb_writer.write_wkb(&geos_geom).unwrap().into();
+    let buf: Vec<u8> = wkb_writer.write_wkb(&geos_geom).unwrap();
 
     let retour = read_wkb(&buf).unwrap();
     assert_eq!(
@@ -107,7 +107,7 @@ fn read_multi_polygon() {
 
     let mut wkb_writer = WKBWriter::new().unwrap();
     wkb_writer.set_include_SRID(true);
-    let buf: Vec<u8> = wkb_writer.write_wkb(&geos_geom).unwrap().into();
+    let buf: Vec<u8> = wkb_writer.write_wkb(&geos_geom).unwrap();
 
     let retour = read_wkb(&buf).unwrap();
     assert_eq!(Geometry::MultiPolygon(orig.clone()), retour.to_geometry());
@@ -141,7 +141,7 @@ fn read_geometry_collection() {
 
     let mut wkb_writer = WKBWriter::new().unwrap();
     wkb_writer.set_include_SRID(true);
-    let buf: Vec<u8> = wkb_writer.write_wkb(&geos_geom).unwrap().into();
+    let buf: Vec<u8> = wkb_writer.write_wkb(&geos_geom).unwrap();
 
     let retour = read_wkb(&buf).unwrap();
     assert_eq!(
@@ -156,7 +156,7 @@ fn test_ewkb_buf_with_trailing_data(g: &Geometry) {
 
     let mut wkb_writer = WKBWriter::new().unwrap();
     wkb_writer.set_include_SRID(true);
-    let mut buf: Vec<u8> = wkb_writer.write_wkb(&geos_geom).unwrap().into();
+    let mut buf: Vec<u8> = wkb_writer.write_wkb(&geos_geom).unwrap();
 
     let original_len = buf.len();
     buf.extend_from_slice(&[0xFF, 0xFF, 0xFF, 0xFF]);

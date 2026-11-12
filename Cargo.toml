@@ -15,15 +15,15 @@ rust-version = "1.82"
 byteorder = "1"
 geo-traits = "0.3"
 num_enum = "0.7"
-thiserror = "1"
+thiserror = "2"
 
 [dev-dependencies]
 approx = "0.5.1"
 bytes = "1.5.0"
-criterion = { version = "0.5", features = ["html_reports"] }
+criterion = { version = "0.7", features = ["html_reports"] }
 geo-types = "0.7.13"
-geos = { version = "10", features = ["geo"] }
-wkt = { version = "0.13", features = ["geo-types"] }
+geos = { version = "11", features = ["geo"] }
+wkt = { version = "0.14", features = ["geo-types"] }
 
 [[bench]]
 name = "parse"
