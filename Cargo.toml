@@ -14,7 +14,6 @@ rust-version = "1.82"
 [dependencies]
 byteorder = "1"
 geo-traits = "0.3"
-num_enum = "0.7"
 thiserror = "2"
 
 [dev-dependencies]
