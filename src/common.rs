@@ -1,6 +1,3 @@
-use std::io::Cursor;
-
-use byteorder::{BigEndian, LittleEndian, ReadBytesExt};
 use num_enum::{IntoPrimitive, TryFromPrimitive};
 
 use crate::error::{WkbError, WkbResult};
@@ -163,23 +160,6 @@ pub(crate) enum WkbType {
 }
 
 impl WkbType {
-    /// Construct from a byte slice representing a WKB geometry
-    pub(crate) fn from_buffer(buf: &[u8]) -> WkbResult<Self> {
-        let mut reader = Cursor::new(buf);
-        let byte_order = reader.read_u8()?;
-        let geometry_code = match byte_order {
-            0 => reader.read_u32::<BigEndian>()?,
-            1 => reader.read_u32::<LittleEndian>()?,
-            other => {
-                return Err(WkbError::General(format!(
-                    "Unexpected byte order: {}",
-                    other
-                )))
-            }
-        };
-        WkbGeometryCode(geometry_code).get_type()
-    }
-
     pub(crate) fn as_geometry_code(&self) -> WkbGeometryCode {
         let code = match self {
             Self::Point(dim) => 1 + dim.as_u32_offset(),

@@ -8,6 +8,7 @@
 - Store the parsed children of `MultiLineString`, `MultiPolygon` and `GeometryCollection` in a boxed slice instead of a `Vec`, shrinking each of these structs from 48 to 40 bytes (#107).
 - Store the point count of `reader::LineString`, `reader::LinearRing` and `reader::MultiPoint` as a `u32`, shrinking each by 8 bytes on 64-bit platforms.
 - Reject geometry type codes 8 and above, such as a Triangle (17), when reading. Previously the type was read as `code & 0x7`, so these codes parsed as another type: a Triangle as a Point (#104).
+- Read coordinates faster: `reader::Coord::new` is now inlined, and header and count fields are read straight from the buffer instead of through a `Cursor`. Previously every coordinate read was a function call from other crates; reading every coordinate of a polygon now takes about half the time (#110).
 
 ## 0.9.3 - 2026-10-14
 

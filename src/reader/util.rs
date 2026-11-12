@@ -2,7 +2,7 @@ use byteorder::{BigEndian, LittleEndian};
 
 use crate::reader::HEADER_BYTES;
 use crate::{common::WkbGeometryCode, error::WkbError, Endianness};
-use std::io::{Cursor, Error};
+use std::io::{Error, ErrorKind};
 
 /// Smallest on-wire size of a full WKB sub-geometry: a 5-byte header (byte order + geometry
 /// type) followed by a 4-byte element count.
@@ -22,13 +22,6 @@ pub(crate) fn bounded_capacity(count: usize, remaining: usize, min_element_size:
 }
 
 pub(crate) trait ReadBytesExt: byteorder::ReadBytesExt {
-    fn read_u32(&mut self, byte_order: Endianness) -> Result<u32, Error> {
-        match byte_order {
-            Endianness::BigEndian => byteorder::ReadBytesExt::read_u32::<BigEndian>(self),
-            Endianness::LittleEndian => byteorder::ReadBytesExt::read_u32::<LittleEndian>(self),
-        }
-    }
-
     fn read_f64(&mut self, byte_order: Endianness) -> Result<f64, Error> {
         match byte_order {
             Endianness::BigEndian => byteorder::ReadBytesExt::read_f64::<BigEndian>(self),
@@ -41,16 +34,33 @@ pub(crate) trait ReadBytesExt: byteorder::ReadBytesExt {
 /// for free.
 impl<R: std::io::Read + ?Sized> ReadBytesExt for R {}
 
+/// Read the `u32` at `offset` of `buf`, without the overhead of a [`std::io::Cursor`].
+#[inline]
+pub(crate) fn read_u32_at(buf: &[u8], offset: u64, byte_order: Endianness) -> Result<u32, Error> {
+    let Some(bytes) = usize::try_from(offset)
+        .ok()
+        .and_then(|start| buf.get(start..start.checked_add(4)?))
+    else {
+        return Err(unexpected_eof());
+    };
+    let bytes: [u8; 4] = bytes.try_into().unwrap();
+    Ok(match byte_order {
+        Endianness::BigEndian => u32::from_be_bytes(bytes),
+        Endianness::LittleEndian => u32::from_le_bytes(bytes),
+    })
+}
+
+/// The error a [`std::io::Cursor`] gives when the buffer ends too soon.
+#[cold]
+pub(crate) fn unexpected_eof() -> Error {
+    Error::new(ErrorKind::UnexpectedEof, "failed to fill whole buffer")
+}
+
 /// Return `true` if this WKB item is EWKB and has an embedded SRID
+#[inline]
 pub(crate) fn has_srid(buf: &[u8], byte_order: Endianness) -> Result<bool, WkbError> {
-    // Read geometry code to see if an SRID exists.
-    let mut reader = Cursor::new(buf);
-
-    // Skip 1-byte byte order that we already know
-    reader.set_position(1);
-
-    let geometry_code = WkbGeometryCode::new(reader.read_u32(byte_order)?);
-    Ok(geometry_code.has_srid())
+    // Skip the 1-byte byte order that we already know
+    Ok(WkbGeometryCode::new(read_u32_at(buf, 1, byte_order)?).has_srid())
 }
 
 #[cfg(test)]

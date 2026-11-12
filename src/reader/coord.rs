@@ -27,6 +27,7 @@ pub struct Coord<'a> {
 }
 
 impl<'a> Coord<'a> {
+    #[inline]
     pub(crate) fn new(buf: &'a [u8], byte_order: Endianness, dim: Dimension) -> Self {
         Self {
             buf: &buf[..dim.size() * F64_WIDTH as usize],

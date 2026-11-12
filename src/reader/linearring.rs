@@ -1,5 +1,3 @@
-use std::io::Cursor;
-
 use geo_traits::{
     GeometryTrait, LineStringTrait, UnimplementedGeometryCollection, UnimplementedLine,
     UnimplementedMultiLineString, UnimplementedMultiPoint, UnimplementedMultiPolygon,
@@ -9,7 +7,7 @@ use geo_traits::{
 use crate::common::Dimension;
 use crate::error::{WkbError, WkbResult};
 use crate::reader::coord::Coord;
-use crate::reader::util::ReadBytesExt;
+use crate::reader::util::read_u32_at;
 use crate::Endianness;
 
 /// A linear ring in a WKB buffer.
@@ -40,8 +38,7 @@ impl<'a> LinearRing<'a> {
         byte_order: Endianness,
         dim: Dimension,
     ) -> WkbResult<Self> {
-        let mut reader = Cursor::new(buf);
-        let num_points = reader.read_u32(byte_order)?;
+        let num_points = read_u32_at(buf, 0, byte_order)?;
 
         let mut ring = Self {
             buf,

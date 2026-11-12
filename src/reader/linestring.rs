@@ -1,9 +1,7 @@
-use std::io::Cursor;
-
 use crate::common::Dimension;
 use crate::error::{WkbError, WkbResult};
 use crate::reader::coord::Coord;
-use crate::reader::util::{has_srid, ReadBytesExt};
+use crate::reader::util::{has_srid, read_u32_at};
 use crate::reader::HEADER_BYTES;
 use crate::Endianness;
 use geo_traits::LineStringTrait;
@@ -28,6 +26,7 @@ impl<'a> LineString<'a> {
     /// Construct a new LineString from a WKB buffer.
     ///
     /// This will parse the WKB header and validate the buffer length.
+    #[inline]
     pub(crate) fn try_new(
         buf: &'a [u8],
         byte_order: Endianness,
@@ -36,9 +35,7 @@ impl<'a> LineString<'a> {
         let has_srid = has_srid(buf, byte_order)?;
 
         let num_points_offset = HEADER_BYTES + if has_srid { 4 } else { 0 };
-        let mut reader = Cursor::new(buf);
-        reader.set_position(num_points_offset);
-        let num_points = reader.read_u32(byte_order)?;
+        let num_points = read_u32_at(buf, num_points_offset, byte_order)?;
 
         let coord_offset = num_points_offset + 4; // Skip the 4-byte num_points field
 

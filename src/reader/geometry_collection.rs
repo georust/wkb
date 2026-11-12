@@ -1,8 +1,6 @@
-use std::io::Cursor;
-
 use crate::common::Dimension;
 use crate::error::{WkbError, WkbResult};
-use crate::reader::util::{bounded_capacity, has_srid, ReadBytesExt, MIN_WKB_GEOMETRY_SIZE};
+use crate::reader::util::{bounded_capacity, has_srid, read_u32_at, MIN_WKB_GEOMETRY_SIZE};
 use crate::reader::{Wkb, HEADER_BYTES, MAX_WKB_NESTING_DEPTH};
 use crate::Endianness;
 use geo_traits::GeometryCollectionTrait;
@@ -33,10 +31,7 @@ impl<'a> GeometryCollection<'a> {
         let has_srid = has_srid(buf, byte_order)?;
         let num_geometries_offset = HEADER_BYTES + if has_srid { 4 } else { 0 };
 
-        let mut reader = Cursor::new(buf);
-        reader.set_position(num_geometries_offset);
-        let num_geometries = reader
-            .read_u32(byte_order)?
+        let num_geometries = read_u32_at(buf, num_geometries_offset, byte_order)?
             .try_into()
             .map_err(|e| WkbError::General(format!("Invalid number of geometries: {}", e)))?;
 
