@@ -1,5 +1,3 @@
-use num_enum::{IntoPrimitive, TryFromPrimitive};
-
 use crate::error::{WkbError, WkbResult};
 
 /// Bit flag for EWKB Geometry with a z coordinate
@@ -181,7 +179,7 @@ impl From<WkbType> for u32 {
 }
 
 /// Endianness
-#[derive(Debug, Clone, Copy, Default, TryFromPrimitive, IntoPrimitive, PartialEq)]
+#[derive(Debug, Clone, Copy, Default, PartialEq)]
 #[repr(u8)]
 pub enum Endianness {
     /// Big endian
@@ -189,4 +187,22 @@ pub enum Endianness {
     /// Little endian
     #[default]
     LittleEndian = 1,
+}
+
+impl TryFrom<u8> for Endianness {
+    type Error = WkbError;
+
+    fn try_from(value: u8) -> Result<Self, Self::Error> {
+        match value {
+            0 => Ok(Self::BigEndian),
+            1 => Ok(Self::LittleEndian),
+            _ => Err(WkbError::General(format!("Invalid byte order: {value}"))),
+        }
+    }
+}
+
+impl From<Endianness> for u8 {
+    fn from(value: Endianness) -> Self {
+        value as u8
+    }
 }
