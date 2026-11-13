@@ -12,7 +12,6 @@ use geo_traits::MultiPointTrait;
 #[derive(Debug, Clone, Copy)]
 pub struct MultiPoint<'a> {
     buf: &'a [u8],
-    byte_order: Endianness,
 
     /// The number of points in this multi point
     num_points: u32,
@@ -37,7 +36,6 @@ impl<'a> MultiPoint<'a> {
         let points_offset = num_points_offset + 4;
         let mut multipoint = Self {
             buf,
-            byte_order,
             num_points,
             points_offset,
             dim,
@@ -46,6 +44,11 @@ impl<'a> MultiPoint<'a> {
         let end_offset = multipoint.point_offset(num_points as u64);
         if end_offset > buf.len() as u64 {
             return Self::handle_invalid_buffer_length(end_offset, buf.len());
+        }
+
+        for i in 0..num_points {
+            let point_offset = multipoint.point_offset(i as u64) as usize;
+            Endianness::try_from(buf[point_offset])?;
         }
 
         multipoint.buf = &buf[0..end_offset as usize];
@@ -72,6 +75,14 @@ impl<'a> MultiPoint<'a> {
         self.points_offset + ((HEADER_BYTES + (self.dim.size() as u64 * 8)) * i)
     }
 
+    #[inline]
+    fn point_at(&self, i: usize) -> Point<'a> {
+        let offset = self.point_offset(i as u64) as usize;
+        let byte_order = Endianness::try_from(self.buf[offset])
+            .expect("point byte order was validated when parsing the MultiPoint");
+        Point::new(&self.buf[offset..], byte_order, self.dim)
+    }
+
     /// The dimension of this MultiPoint
     pub fn dimension(&self) -> Dimension {
         self.dim
@@ -94,8 +105,7 @@ impl<'a> MultiPointTrait for MultiPoint<'a> {
     }
 
     unsafe fn point_unchecked(&self, i: usize) -> Self::InnerPointType<'_> {
-        let offset = self.point_offset(i as u64);
-        Point::new(&self.buf[offset as usize..], self.byte_order, self.dim)
+        self.point_at(i)
     }
 }
 
@@ -110,7 +120,6 @@ impl<'a> MultiPointTrait for &MultiPoint<'a> {
     }
 
     unsafe fn point_unchecked(&self, i: usize) -> Self::InnerPointType<'_> {
-        let offset = self.point_offset(i as u64);
-        Point::new(&self.buf[offset as usize..], self.byte_order, self.dim)
+        (*self).point_at(i)
     }
 }
