@@ -46,6 +46,8 @@ impl<'a> MultiPoint<'a> {
             return Self::handle_invalid_buffer_length(end_offset, buf.len());
         }
 
+        // Every point carries its own byte order. Check them all now, so that `point_at` can later
+        // convert them without handling an error.
         for i in 0..num_points {
             let point_offset = multipoint.point_offset(i as u64) as usize;
             Endianness::try_from(buf[point_offset])?;
