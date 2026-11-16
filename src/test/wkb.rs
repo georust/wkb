@@ -1,6 +1,7 @@
 use geo_traits::to_geo::ToGeoGeometry;
 use geo_traits::{
-    CoordTrait, Dimensions, GeometryTrait, LineStringTrait, PointTrait, PolygonTrait,
+    CoordTrait, Dimensions, GeometryTrait, LineStringTrait, MultiPointTrait, PointTrait,
+    PolygonTrait,
 };
 use geo_types::{polygon, Geometry};
 
@@ -257,6 +258,56 @@ fn round_trip_multi_point() {
     .unwrap();
     let retour = read_wkb(&buf).unwrap();
     assert_eq!(Geometry::MultiPoint(orig), retour.to_geometry());
+}
+
+#[test]
+fn read_mixed_endian_multi_point() {
+    for (parent_byte_order, child_byte_order) in [
+        (Endianness::LittleEndian, Endianness::BigEndian),
+        (Endianness::BigEndian, Endianness::LittleEndian),
+    ] {
+        let mut buf = vec![parent_byte_order.into()];
+        match parent_byte_order {
+            Endianness::BigEndian => {
+                buf.extend_from_slice(&4_u32.to_be_bytes());
+                buf.extend_from_slice(&1_u32.to_be_bytes());
+            }
+            Endianness::LittleEndian => {
+                buf.extend_from_slice(&4_u32.to_le_bytes());
+                buf.extend_from_slice(&1_u32.to_le_bytes());
+            }
+        }
+
+        buf.push(child_byte_order.into());
+        match child_byte_order {
+            Endianness::BigEndian => {
+                buf.extend_from_slice(&1_u32.to_be_bytes());
+                buf.extend_from_slice(&1.0_f64.to_be_bytes());
+                buf.extend_from_slice(&2.0_f64.to_be_bytes());
+            }
+            Endianness::LittleEndian => {
+                buf.extend_from_slice(&1_u32.to_le_bytes());
+                buf.extend_from_slice(&1.0_f64.to_le_bytes());
+                buf.extend_from_slice(&2.0_f64.to_le_bytes());
+            }
+        }
+
+        let wkb = read_wkb(&buf).unwrap();
+        let geo_traits::GeometryType::MultiPoint(multi_point) = wkb.as_type() else {
+            panic!("Expected MultiPoint");
+        };
+        let point = multi_point.point(0).unwrap();
+        assert_eq!(point.byte_order(), child_byte_order);
+        let coord = point.coord().unwrap();
+        assert_eq!((coord.x(), coord.y()), (1.0, 2.0));
+
+        assert_eq!(
+            wkb.to_geometry(),
+            Geometry::MultiPoint(geo_types::MultiPoint::new(vec![geo_types::Point::new(
+                1.0, 2.0,
+            )]))
+        );
+    }
 }
 
 #[test]
