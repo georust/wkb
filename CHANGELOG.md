@@ -2,12 +2,15 @@
 
 ## Unreleased
 
+## 0.9.4 - 2026-11-16
+
 - Read each point in a `MultiPoint` using its own byte order instead of the parent's, fixing mixed-endian `MultiPoint` coordinates (#112).
 - Write an empty exterior ring for a polygon that has interior rings but no exterior ring. Previously the writer wrote `numRings = 0` followed by the interior rings, which readers parsed as `POLYGON EMPTY` with trailing data (#100).
 - Write the `numPoints` field for the ring of a `Rect`, and always write a `Rect` as a 2D polygon. Previously the writer wrote `numRings = 1` followed directly by the coordinates, which readers could not parse, and labelled a 3D `Rect` as `PolygonZ` while writing 2D coordinates (#101).
 - Count the ring's `numPoints` field in `triangle_wkb_size`. Previously the size was 4 bytes smaller than the bytes written (#102).
 - Store the parsed children of `MultiLineString`, `MultiPolygon` and `GeometryCollection` in a boxed slice instead of a `Vec`, shrinking each of these structs from 48 to 40 bytes (#107).
 - Store the point count of `reader::LineString`, `reader::LinearRing` and `reader::MultiPoint` as a `u32`, shrinking each by 8 bytes on 64-bit platforms.
+- Drop the `num_enum` dependency; `Endianness` still converts to and from `u8` (#111).
 - Reject geometry type codes 8 and above, such as a Triangle (17), when reading. Previously the type was read as `code & 0x7`, so these codes parsed as another type: a Triangle as a Point (#104).
 - Read coordinates faster: `reader::Coord::new` is now inlined, and header and count fields are read straight from the buffer instead of through a `Cursor`. Previously every coordinate read was a function call from other crates; reading every coordinate of a polygon now takes about half the time (#110).
 
