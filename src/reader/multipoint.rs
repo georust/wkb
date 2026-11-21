@@ -28,8 +28,8 @@ impl<'a> MultiPoint<'a> {
         byte_order: Endianness,
         dim: Dimension,
     ) -> WkbResult<Self> {
-        let has_srid = has_srid(buf, byte_order)?;
-        let num_points_offset = HEADER_BYTES + if has_srid { 4 } else { 0 };
+        let parent_has_srid = has_srid(buf, byte_order)?;
+        let num_points_offset = HEADER_BYTES + if parent_has_srid { 4 } else { 0 };
 
         let num_points = read_u32_at(buf, num_points_offset, byte_order)?;
 
@@ -50,7 +50,13 @@ impl<'a> MultiPoint<'a> {
         // convert them without handling an error.
         for i in 0..num_points {
             let point_offset = multipoint.point_offset(i as u64) as usize;
-            Endianness::try_from(buf[point_offset])?;
+            let point_byte_order = Endianness::try_from(buf[point_offset])?;
+            // Points are read at a fixed stride, so a point with its own SRID can't be read.
+            if has_srid(&buf[point_offset..], point_byte_order)? {
+                return Err(WkbError::General(
+                    "A Point inside a MultiPoint must not have an SRID.".to_string(),
+                ));
+            }
         }
 
         multipoint.buf = &buf[0..end_offset as usize];

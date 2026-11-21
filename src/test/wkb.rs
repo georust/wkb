@@ -311,6 +311,21 @@ fn read_mixed_endian_multi_point() {
 }
 
 #[test]
+fn read_multi_point_with_child_srid() {
+    // A MultiPoint holding one Point whose type code has the EWKB SRID flag set. This used to
+    // panic in `Point::new` instead of returning an error.
+    let mut buf = vec![Endianness::LittleEndian.into()];
+    buf.extend_from_slice(&4_u32.to_le_bytes());
+    buf.extend_from_slice(&1_u32.to_le_bytes());
+    buf.push(Endianness::LittleEndian.into());
+    buf.extend_from_slice(&0x2000_0001_u32.to_le_bytes());
+    buf.extend_from_slice(&1.0_f64.to_le_bytes());
+    buf.extend_from_slice(&2.0_f64.to_le_bytes());
+
+    assert!(read_wkb(&buf).is_err());
+}
+
+#[test]
 fn round_trip_multi_line_string() {
     let orig = multi_line_string_2d();
 
