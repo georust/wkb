@@ -310,6 +310,76 @@ fn read_mixed_endian_multi_point() {
     }
 }
 
+/// Write a multi geometry header with one geometry in `parent_byte_order`, followed by
+/// `child`, which carries its own byte order.
+fn mixed_endian_multi(parent_byte_order: Endianness, type_code: u32, child: &[u8]) -> Vec<u8> {
+    let mut buf = vec![parent_byte_order.into()];
+    match parent_byte_order {
+        Endianness::BigEndian => {
+            buf.extend_from_slice(&type_code.to_be_bytes());
+            buf.extend_from_slice(&1_u32.to_be_bytes());
+        }
+        Endianness::LittleEndian => {
+            buf.extend_from_slice(&type_code.to_le_bytes());
+            buf.extend_from_slice(&1_u32.to_le_bytes());
+        }
+    }
+    buf.extend_from_slice(child);
+    buf
+}
+
+#[test]
+fn read_mixed_endian_multi_line_string() {
+    let line_string = linestring_2d();
+    for (parent_byte_order, child_byte_order) in [
+        (Endianness::LittleEndian, Endianness::BigEndian),
+        (Endianness::BigEndian, Endianness::LittleEndian),
+    ] {
+        let mut child = Vec::new();
+        write_line_string(
+            &mut child,
+            &line_string,
+            &WriteOptions {
+                endianness: child_byte_order,
+            },
+        )
+        .unwrap();
+        let buf = mixed_endian_multi(parent_byte_order, 5, &child);
+
+        let wkb = read_wkb(&buf).unwrap();
+        assert_eq!(
+            wkb.to_geometry(),
+            Geometry::MultiLineString(geo_types::MultiLineString::new(vec![line_string.clone()]))
+        );
+    }
+}
+
+#[test]
+fn read_mixed_endian_multi_polygon() {
+    let polygon = polygon_2d_with_interior();
+    for (parent_byte_order, child_byte_order) in [
+        (Endianness::LittleEndian, Endianness::BigEndian),
+        (Endianness::BigEndian, Endianness::LittleEndian),
+    ] {
+        let mut child = Vec::new();
+        write_polygon(
+            &mut child,
+            &polygon,
+            &WriteOptions {
+                endianness: child_byte_order,
+            },
+        )
+        .unwrap();
+        let buf = mixed_endian_multi(parent_byte_order, 6, &child);
+
+        let wkb = read_wkb(&buf).unwrap();
+        assert_eq!(
+            wkb.to_geometry(),
+            Geometry::MultiPolygon(geo_types::MultiPolygon::new(vec![polygon.clone()]))
+        );
+    }
+}
+
 #[test]
 fn read_multi_point_with_child_srid() {
     // A MultiPoint holding one Point whose type code has the EWKB SRID flag set. This used to

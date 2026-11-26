@@ -1,7 +1,9 @@
 use crate::common::Dimension;
 use crate::error::{WkbError, WkbResult};
 use crate::reader::linestring::LineString;
-use crate::reader::util::{bounded_capacity, has_srid, read_u32_at, MIN_WKB_GEOMETRY_SIZE};
+use crate::reader::util::{
+    bounded_capacity, has_srid, read_u32_at, unexpected_eof, MIN_WKB_GEOMETRY_SIZE,
+};
 use crate::reader::HEADER_BYTES;
 use crate::Endianness;
 use geo_traits::MultiLineStringTrait;
@@ -39,7 +41,10 @@ impl<'a> MultiLineString<'a> {
         );
         let mut wkb_line_strings = Vec::with_capacity(capacity);
         for _ in 0..num_line_strings {
-            let ls = LineString::try_new(&buf[line_string_offset as usize..], byte_order, dim)?;
+            let ls_buf = &buf[line_string_offset as usize..];
+            // Each line string carries its own byte order, which may differ from the parent's.
+            let ls_byte_order = Endianness::try_from(*ls_buf.first().ok_or_else(unexpected_eof)?)?;
+            let ls = LineString::try_new(ls_buf, ls_byte_order, dim)?;
             line_string_offset += ls.size();
             wkb_line_strings.push(ls);
         }
