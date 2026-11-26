@@ -1,7 +1,9 @@
 use crate::common::Dimension;
 use crate::error::{WkbError, WkbResult};
 use crate::reader::polygon::Polygon;
-use crate::reader::util::{bounded_capacity, has_srid, read_u32_at, MIN_WKB_GEOMETRY_SIZE};
+use crate::reader::util::{
+    bounded_capacity, has_srid, read_u32_at, unexpected_eof, MIN_WKB_GEOMETRY_SIZE,
+};
 use crate::reader::HEADER_BYTES;
 use crate::Endianness;
 use geo_traits::MultiPolygonTrait;
@@ -37,7 +39,11 @@ impl<'a> MultiPolygon<'a> {
         );
         let mut wkb_polygons = Vec::with_capacity(capacity);
         for _ in 0..num_polygons {
-            let polygon = Polygon::try_new(&buf[polygon_offset as usize..], byte_order, dim)?;
+            let polygon_buf = &buf[polygon_offset as usize..];
+            // Each polygon carries its own byte order, which may differ from the parent's.
+            let polygon_byte_order =
+                Endianness::try_from(*polygon_buf.first().ok_or_else(unexpected_eof)?)?;
+            let polygon = Polygon::try_new(polygon_buf, polygon_byte_order, dim)?;
             polygon_offset += polygon.size();
             wkb_polygons.push(polygon);
         }
